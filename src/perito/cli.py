@@ -35,6 +35,11 @@ def _parser():
     parser.add_argument('--casos', type=Path, default=cases.CASES_DIR, help='Pasta dos casos')
     parser.add_argument('--debug', action='store_true', help='Exibe traceback em erros')
     commands = parser.add_subparsers(dest='command', required=True)
+    ui = commands.add_parser('ui', help='Abre a interface local de consulta')
+    ui.add_argument('--porta', type=int, default=8765)
+    ui.add_argument('--caso')
+    ui.add_argument('--sem-navegador', action='store_true')
+    ui.add_argument('--token')
     commands.add_parser('casos', help='Lista os casos')
     new = commands.add_parser('novo-caso', help='Cria a estrutura de um caso')
     new.add_argument('id')
@@ -217,6 +222,10 @@ def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
     try:
         args = _parser().parse_args(arguments)
+        if args.command == 'ui':
+            from .ui.server import run
+            return run(case_base=args.casos, port=args.porta, case_id=args.caso,
+                       open_browser=not args.sem_navegador, token=args.token)
         if args.command == 'casos':
             return _list_cases(args.casos)
         if args.command == 'novo-caso':
