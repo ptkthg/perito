@@ -23,6 +23,8 @@ interface Props {
   rowH: number;
   marked: ReadonlySet<string>;
   searchTerm: string;
+  /** Eventos destacados (refs de hipóteses/achados). */
+  highlight: ReadonlySet<number> | null;
   modo: Modo;
   tacticOf: TacticOf;
   onCursor(cur: number, col: number): void;
@@ -151,7 +153,7 @@ const Row = memo(function Row({ ev, i, r, top, sel, col, marked, resumoChars, hi
 });
 
 export const EventGrid = forwardRef<EventGridHandle, Props>(function EventGrid(props, ref) {
-  const { events, cur, col, rowH, marked, searchTerm, modo, tacticOf, onCursor, onActivate, onVisible, empty } = props;
+  const { events, cur, col, rowH, marked, searchTerm, highlight, modo, tacticOf, onCursor, onActivate, onVisible, empty } = props;
   const guiado = modo === 'guiado';
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -236,8 +238,9 @@ export const EventGrid = forwardRef<EventGridHandle, Props>(function EventGrid(p
   // Destaque da busca incremental (só nas linhas visíveis; barato).
   const term = searchTerm.toLowerCase();
   const isHit = (ev: PeritoEvent) =>
-    !!term &&
-    [ev.description, ev.cmdline, ev.host, ev.user, ev.src_ip, ev.dst_ip, ev.domain, ev.file_path, ev.raw_ref].some((v) => v?.toLowerCase().includes(term));
+    !!highlight?.has(ev.idx) ||
+    (!!term &&
+    [ev.description, ev.cmdline, ev.host, ev.user, ev.src_ip, ev.dst_ip, ev.domain, ev.file_path, ev.raw_ref].some((v) => v?.toLowerCase().includes(term)));
 
   return (
     <div

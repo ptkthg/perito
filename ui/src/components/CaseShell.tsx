@@ -20,6 +20,13 @@ import {
 import { makeTacticOf } from '../lib/attack-pt';
 import type { Modo } from '../lib/mode';
 import { Overview } from '../views/overview/Overview';
+import { Entities } from '../views/entities/Entities';
+import { HypAch } from '../views/hyp/HypAch';
+import { Ioc } from '../views/ioc/Ioc';
+import { ErrorBoundary } from './ErrorBoundary';
+import type { ViewHandle } from '../lib/view';
+import { resolveRefs } from '../lib/refs';
+import type { Achado, PeritoEvent } from '../lib/types';
 import { parseCommand } from '../lib/commands';
 import { navigate, visaoPorTecla } from '../lib/route';
 import { DENSIDADES, type Densidade, loadDensidade, loadTema, saveDensidade, saveTema } from '../lib/prefs';
@@ -66,6 +73,11 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
   const [tema, setTema] = useState(loadTema);
 
   const tlRef = useRef<TimelineHandle>(null);
+  const viewRef = useRef<ViewHandle>(null);
+  /** Handle da visão ativa (timeline fica sempre montada; as outras, uma por vez). */
+  const active = useCallback((): ViewHandle | null => (visao === 'timeline' ? tlRef.current : viewRef.current), [visao]);
+  const activeRef = useRef(active);
+  activeRef.current = active;
   const cmdRef = useRef<CommandLineHandle>(null);
 
   const say = useCallback((text: string, kind: MsgKind = 'info') => setMsg((m) => ({ text, kind, n: m.n + 1 })), []);
@@ -263,9 +275,70 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
   );
 
   const focusView = useCallback(() => {
-    if (visao === 'timeline') tlRef.current?.focus();
+    const h = activeRef.current();
+    if (h?.focus) h.focus();
     else (document.activeElement as HTMLElement | null)?.blur?.();
-  }, [visao]);
+  }, []);
+
+  // ---------- refs de evidência → eventos na F1 ----------
+  const allRef = useRef<Promise<PeritoEvent[]> | null>(null);
+  const ensureAll = useCallback(() => (allRef.current ??= api.eventos(caso, {}).then((r) => r.eventos)), [caso]);
+  const respRef = useRef(resp);
+  respRef.current = resp;
+  const pendingFocus = useRef<{ idxs: number[]; rotulo: string } | null>(null);
+
+  const focusLater = useCallback(
+    (idxs: number[], rotulo: string) => {
+      window.setTimeout(() => {
+        const n = tlRef.current?.focusEvents(idxs, rotulo) ?? 0;
+        if (n) say(`${rotulo}: ${n} evento(s) destacado(s) · n/N percorre · Esc limpa`, 'ok');
+        else say(`${rotulo}: eventos fora do filtro atual`, 'err');
+      }, 60);
+    },
+    [say],
+  );
+
+  const openEvents = useCallback(
+    (idxs: number[], rotulo: string) => {
+      navigate(caso, 'timeline');
+      const atuais = new Set((respRef.current?.eventos ?? []).map((e) => e.idx));
+      if (idxs.every((i) => atuais.has(i))) {
+        focusLater(idxs, rotulo);
+        return;
+      }
+      pendingFocus.current = { idxs, rotulo };
+      applyFilter(EMPTY_FILTER, `filtros limpos para mostrar ${rotulo} · u desfaz`);
+    },
+    [caso, focusLater, applyFilter],
+  );
+
+  useEffect(() => {
+    const p = pendingFocus.current;
+    if (!p || !resp || evLoading) return;
+    pendingFocus.current = null;
+    focusLater(p.idxs, p.rotulo);
+  }, [resp, evLoading, focusLater]);
+
+  const openRefs = useCallback(
+    (texto: string, achados: Achado[], rotulo: string) => {
+      ensureAll()
+        .then((evs) => {
+          const idxs = resolveRefs(texto, evs, achados);
+          if (idxs.length === 0) say(`${rotulo}: nenhum evento da timeline corresponde a "${texto}"`, 'err');
+          else openEvents(idxs, rotulo);
+        })
+        .catch((e: unknown) => say(`ERRO ${describeError(e)}`, 'err'));
+    },
+    [ensureAll, openEvents, say],
+  );
+
+  const pivotAndGo = useCallback(
+    (field: FilterField, value: string, via: string) => {
+      onPivot(field, value, via);
+      navigate(caso, 'timeline');
+    },
+    [onPivot, caso],
+  );
 
   const onPrompt = useCallback((prefill: string, mode: PromptMode) => cmdRef.current?.focus(prefill, mode), []);
 
@@ -371,11 +444,11 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
         }
         case 'Escape':
           e.preventDefault();
-          if (s.visao === 'timeline' && tlRef.current?.escape()) return;
+          if (activeRef.current()?.escape?.()) return;
           (document.activeElement as HTMLElement | null)?.blur?.();
           return;
       }
-      if (s.visao === 'timeline' && tlRef.current?.onKey(e)) {
+      if (activeRef.current()?.onKey?.(e)) {
         e.preventDefault();
       }
     };
@@ -411,6 +484,7 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
           </p>
         )}
         <div className="view-slot" hidden={visao !== 'timeline'}>
+          <ErrorBoundary label="TIMELINE" chave="timeline">
           <Timeline
             ref={tlRef}
             caso={caso}
@@ -431,9 +505,11 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
             modo={modo}
             onOverview={() => navigate(caso, 'visao')}
           />
+          </ErrorBoundary>
         </div>
         {visao === 'visao' && (
           <div className="view-slot view-scroll">
+            <ErrorBoundary label="VISÃO GERAL" chave="visao">
             <Overview
               caso={caso}
               resumo={resumo}
@@ -448,9 +524,44 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
               }}
               onCobertura={() => navigate(caso, 'cobertura')}
             />
+            </ErrorBoundary>
           </div>
         )}
-        {visao !== 'timeline' && visao !== 'visao' && <PendingView visao={visao} />}
+        {visao === 'entidades' && (
+          <div className="view-slot">
+            <ErrorBoundary label="ENTIDADES" chave="entidades">
+              <Entities
+                ref={viewRef}
+                caso={caso}
+                entidades={entidades}
+                resumo={resumo}
+                modo={modo}
+                onPivot={(f, v) => pivotAndGo(f, v, 'ENTIDADES')}
+                onFilter={(f, v) => {
+                  onClause({ field: f, neg: false, value: v }, 'ENTIDADES');
+                  navigate(caso, 'timeline');
+                }}
+                onMsg={say}
+                onPrompt={onPrompt}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
+        {visao === 'hipoteses' && (
+          <div className="view-slot view-scroll">
+            <ErrorBoundary label="HIP/ACH" chave="hipoteses">
+              <HypAch ref={viewRef} caso={caso} modo={modo} onOpenRefs={openRefs} onMsg={say} onPrompt={onPrompt} />
+            </ErrorBoundary>
+          </div>
+        )}
+        {visao === 'ioc' && (
+          <div className="view-slot view-scroll">
+            <ErrorBoundary label="IOC" chave="ioc">
+              <Ioc ref={viewRef} caso={caso} modo={modo} onPivot={(f, v) => pivotAndGo(f, v, 'IOC')} onMsg={say} onPrompt={onPrompt} />
+            </ErrorBoundary>
+          </div>
+        )}
+        {!['timeline', 'visao', 'entidades', 'hipoteses', 'ioc'].includes(visao) && <PendingView visao={visao} />}
       </main>
       <footer className="bottom">
         <div className={`msg msg-${msg.kind}`} role="status" aria-live="polite" aria-atomic="true">
@@ -460,9 +571,9 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
           ref={cmdRef}
           ctx={suggestCtx}
           onExecute={execute}
-          onSearch={(t) => tlRef.current?.search(t)}
-          onSearchCommit={(t) => tlRef.current?.searchCommit(t)}
-          onSearchCancel={() => tlRef.current?.searchCancel()}
+          onSearch={(t) => activeRef.current()?.search?.(t)}
+          onSearchCommit={(t) => activeRef.current()?.searchCommit?.(t)}
+          onSearchCancel={() => activeRef.current()?.searchCancel?.()}
           onLeave={focusView}
         />
       </footer>

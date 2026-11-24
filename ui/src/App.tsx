@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRoute } from './lib/route';
 import { CaseSelect } from './components/CaseSelect';
 import { CaseShell } from './components/CaseShell';
-import { loadDensidade, loadTema } from './lib/prefs';
+import { loadTema } from './lib/prefs';
 import { type Modo, ModoContext, loadModo, saveModo } from './lib/mode';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export function App() {
   const route = useRoute();
@@ -13,7 +14,6 @@ export function App() {
 
   // Preferências globais aplicadas no <html> antes do primeiro uso.
   useEffect(() => {
-    document.documentElement.style.setProperty('--row-h', `${loadDensidade()}px`);
     if (loadTema() === 'claro') document.documentElement.dataset.theme = 'light';
   }, []);
 
@@ -24,6 +24,7 @@ export function App() {
 
   return (
     <ModoContext.Provider value={modo}>
+      <ErrorBoundary label="APP" chave="app">
       {!route.caso ? (
         <CaseSelect />
       ) : (
@@ -35,6 +36,7 @@ export function App() {
           onModo={setModo}
         />
       )}
+      </ErrorBoundary>
     </ModoContext.Provider>
   );
 }

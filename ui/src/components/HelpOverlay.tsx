@@ -25,6 +25,11 @@ const TECLAS: [string, string][] = [
   ['arrastar no sismógrafo', 'define a janela de tempo; clique vai ao horário'],
   ['[ver caso inteiro]', 'no GUIADO o sismógrafo abre no período suspeito; o botão alterna'],
   ['a · H', 'promover a achado · vincular a hipótese (entrega I4)'],
+  ['F2 · j/k h/l ↵ f y /', 'entidades: item · coluna · pivô · filtro · copia · filtra a lista'],
+  ['F6 · ↵ · clique em ref', 'hipóteses/achados: abre as evidências (A6, arquivo.csv:15-17) na timeline'],
+  ['n / N (após ref)', 'percorre os eventos destacados vindos de uma ref; Esc limpa'],
+  ['F4 · D · y · Y', 'IOC: alterna defanged/real · copia o valor real · copia todos visíveis (defanged)'],
+  ['r · R (em erro)', 'recarrega a visão · recarrega o app'],
   ['?', 'esta ajuda'],
 ];
 

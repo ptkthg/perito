@@ -26,6 +26,8 @@ export interface TimelineHandle {
   searchCancel(): void;
   /** Esc em camadas: devolve true se consumiu (soltou detalhe / limpou busca). */
   escape(): boolean;
+  /** Seleciona e destaca eventos (idx) vindos de refs; devolve quantos estão na lista atual. */
+  focusEvents(idxs: number[], rotulo: string): number;
 }
 
 export type MsgKind = 'ok' | 'err' | 'info';
@@ -88,6 +90,7 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
   const [marks, setMarks] = useState<Set<string>>(() => loadMarcas(caso));
   const [visible, setVisible] = useState<[string, string] | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [destaque, setDestaque] = useState<{ idxs: Set<number>; rotulo: string } | null>(null);
   const searchOrigin = useRef(0);
   const selIdx = useRef<number | null>(null);
   const gridRef = useRef<EventGridHandle>(null);
@@ -323,6 +326,20 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
             return true;
           case 'n':
           case 'N': {
+            if (!searchTerm && destaque) {
+              const n = events.length;
+              const dir = e.key === 'n' ? 1 : -1;
+              for (let k = 1; k <= n; k++) {
+                const i = (((cur + dir * k) % n) + n) % n;
+                if (destaque.idxs.has(events[i]!.idx)) {
+                  move(i);
+                  const lista = events.filter((x) => destaque.idxs.has(x.idx));
+                  onMsg(`${destaque.rotulo}: ${lista.findIndex((x) => x.idx === events[i]!.idx) + 1}/${lista.length} · n/N próximo · Esc limpa`, 'info');
+                  break;
+                }
+              }
+              return true;
+            }
             if (!searchTerm) {
               onMsg('sem busca ativa — / inicia', 'info');
               return true;
@@ -403,10 +420,26 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
           onMsg('destaque da busca limpo', 'info');
           return true;
         }
+        if (destaque) {
+          setDestaque(null);
+          onMsg('destaque das evidências limpo', 'info');
+          return true;
+        }
         return false;
       },
+      focusEvents(idxs: number[], rotulo: string): number {
+        const set = new Set(idxs);
+        const presentes = events.filter((x) => set.has(x.idx));
+        setDestaque({ idxs: set, rotulo });
+        setSearchTerm('');
+        if (presentes.length === 0) return 0;
+        const i = events.indexOf(presentes[0]!);
+        selIdx.current = presentes[0]!.idx;
+        move(i);
+        return presentes.length;
+      },
     }),
-    [events, cur, col, rowH, move, onMsg, onPivot, onClause, copy, jumpMark, searchTerm, searchNext, countHits, onPrompt, pinned, guiado, tacticOf, toggleMark],
+    [events, cur, col, rowH, move, onMsg, onPivot, onClause, copy, jumpMark, searchTerm, searchNext, countHits, onPrompt, pinned, guiado, tacticOf, toggleMark, destaque],
   );
 
   const onCursor = useCallback((i: number, c: number) => {
@@ -542,6 +575,7 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
             rowH={rowH}
             marked={marks}
             searchTerm={searchTerm}
+            highlight={destaque?.idxs ?? null}
             onCursor={onCursor}
             onActivate={onActivate}
             onVisible={setVisible}

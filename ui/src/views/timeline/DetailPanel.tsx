@@ -32,7 +32,7 @@ const L = {
     corrob: 'CORROB', obs: '⊙ OBSERV', deduz: '~ DEDUZ', vol: '▲ VOLUME ALTO', dup: 'DUPLICATAS', attack: 'ATT&CK', raw: 'RAW',
   },
   guiado: {
-    ts: 'HORÁRIO', tsOrig: 'NA FONTE', host: 'MÁQUINA', user: 'CONTA', ips: 'ORIGEM→DEST', hostIp: 'IP MÁQUINA', dom: 'DOMÍNIO', proc: 'PROGRAMA',
+    ts: 'HORÁRIO', tsOrig: 'NA FONTE', host: 'MÁQUINA', user: 'CONTA', ips: 'DE → PARA', hostIp: 'IP MÁQUINA', dom: 'DOMÍNIO', proc: 'PROGRAMA',
     pai: 'ABERTO POR', arq: 'ARQUIVO', hash: 'HASH', acao: 'AÇÃO', res: 'RESULTADO', sev: 'GRAVIDADE', resumo: 'O QUE ACONTECEU',
     cmd: 'LINHA DE COMANDO', corrob: 'TAMBÉM VISTO EM', obs: 'VISTO POR', deduz: 'MÁQUINA DEDUZIDA', vol: '▲ ENVIO DE GRANDE VOLUME',
     dup: 'DUPLICATAS', attack: 'TÉCNICAS (ATT&CK)', raw: 'REFERÊNCIA',
