@@ -42,6 +42,9 @@ def test_corroboration_and_volume(rows):
 
 
 def test_filters_entities_iocs(rows):
+    selected_domains = timeline.filter_events(rows, domain='EXAMPLE-CDN')
+    assert selected_domains
+    assert all('example-cdn' in e.domain.lower() for e in selected_domains)
     selected = timeline.filter_events(rows, host='SRV-FILE-01.acme.local')
     assert any(e.source == 'splunk' and e.extra.get('observer') == 'pa-fw-01' for e in selected)
     assert timeline.filter_events(rows, user='ACME\\M.Silva')

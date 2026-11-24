@@ -14,6 +14,7 @@ from .. import case as cases
 from .. import timeline
 from ..mitre import TECHNIQUES
 from ..schema import parse_ts
+from .graph import build_graph, relevant_graph
 
 DOCUMENTS = ('caso', 'triagem', 'achados', 'hipoteses', 'escopo', 'limitacoes', 'acoes')
 _DOCUMENT_FILE = re.compile(r'[A-Za-z0-9._-]+\.md\Z')
@@ -291,9 +292,12 @@ def _dispatch(base, route, query, cache):
         return 200, parse_hypotheses(_read(case.path / 'hipoteses.md'))
     if endpoint == 'achados':
         return 200, parse_findings(_read(case.path / 'achados.md'))
-    if endpoint not in ('resumo', 'eventos', 'histograma', 'entidades', 'iocs'):
+    if endpoint not in ('resumo', 'eventos', 'histograma', 'entidades', 'iocs', 'grafo'):
         return 404, {'erro': 'Rota não encontrada.'}
     events = events_for(case)
+    if endpoint == 'grafo':
+        graph = build_graph(events, timeline.coverage(events)['hosts_sem_edr'])
+        return 200, relevant_graph(graph) if _one(query, 'relevantes') == '1' else graph
     if endpoint == 'resumo':
         return 200, _summary(case, events)
     if endpoint == 'entidades':

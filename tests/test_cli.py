@@ -72,6 +72,10 @@ def test_output_limit_and_filters(case_cli, tmp_path):
         exported = list(csv.DictReader(fh))
     assert len(exported) == 2 and all(e['event_type'] == 'process' for e in exported)
     assert len((path / 'timeline' / 'timeline.jsonl').read_text(encoding='utf-8').splitlines()) == 50
+    code, out, err = run('timeline', 'TESTE-001', '--dominio', 'EXAMPLE-CDN', '--formato', 'jsonl')
+    rows = [json.loads(line) for line in out.splitlines()]
+    assert code == 0 and not err and rows
+    assert all('example-cdn' in row['domain'].lower() for row in rows)
 
 
 def test_unknown_evidence_and_errors(case_cli, tmp_path):

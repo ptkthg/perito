@@ -110,7 +110,7 @@ def filter_events(events, *, host=None, user=None, ip=None, sha256=None, domain=
             continue
         if sha256 and sha256.lower() != (ev.sha256 or '').lower():
             continue
-        if domain and domain.lower() != (ev.domain or '').lower():
+        if domain and domain.lower() not in (ev.domain or '').lower():
             continue
         if (start and ev.ts_utc < start) or (end and ev.ts_utc > end):
             continue
