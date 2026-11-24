@@ -12,6 +12,7 @@ from urllib.parse import unquote
 
 from .. import case as cases
 from .. import timeline
+from .._atomic import version
 from ..mitre import TECHNIQUES
 from ..schema import parse_ts
 from .graph import build_graph, relevant_graph
@@ -23,7 +24,21 @@ _FIELDS = {
     'status': 'status', 'confianca': 'confianca', 'fase att&ck': 'fase',
     'sustentacao': 'sustentacao', 'confirmaria': 'confirmaria',
     'refutaria': 'refutaria', 'proximo passo': 'proximo_passo',
+    'contradiz': 'contradiz', 'justificativa': 'justificativa',
 }
+
+FORMATS = [
+    {'fonte': name, 'descricao': description} for name, description in (
+        ('auto', 'Detecção automática da fonte'),
+        ('defender', 'Defender XDR Advanced Hunting (CSV/JSON)'),
+        ('sentinel', 'Microsoft Sentinel (CSV/JSON)'),
+        ('entra_signin', 'Microsoft Entra ID sign-in (CSV/JSON)'),
+        ('entra_audit', 'Microsoft Entra ID audit (CSV/JSON)'),
+        ('splunk', 'Splunk (CSV/JSON)'),
+        ('elastic', 'Elastic / Elasticsearch (JSON/NDJSON)'),
+        ('wazuh', 'Wazuh alerts (JSON/NDJSON)'),
+    )
+]
 
 
 class TimelineCache:
@@ -265,6 +280,8 @@ def _dispatch(base, route, query, cache):
     def events_for(case):
         return cache.events(case) if cache is not None else timeline.build(timeline.load_events(case))
 
+    if route == '/api/formatos':
+        return 200, FORMATS
     if route == '/api/casos':
         rows = []
         for path in sorted(base.iterdir()) if base.is_dir() else []:
@@ -287,7 +304,7 @@ def _dispatch(base, route, query, cache):
     if endpoint.startswith('doc/'):
         name = endpoint[4:]
         group, path = _document(case, name)
-        return 200, dict(nome=name, grupo=group, conteudo=_read(path), mtime=_mtime(path))
+        return 200, dict(nome=name, grupo=group, conteudo=_read(path), mtime=_mtime(path), versao=version(path))
     if endpoint == 'hipoteses':
         return 200, parse_hypotheses(_read(case.path / 'hipoteses.md'))
     if endpoint == 'achados':

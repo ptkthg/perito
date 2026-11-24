@@ -1,12 +1,14 @@
-"""Servidor HTTP de leitura, restrito ao loopback e à sessão local."""
+"""Servidor HTTP da bancada, restrito ao loopback e à sessão local."""
 from __future__ import annotations
 
 import json
 import mimetypes
 import os
+import re
 import secrets
 import sys
 import webbrowser
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import RLock
@@ -14,6 +16,8 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from .. import case as cases
 from .api import TimelineCache, dispatch
+from .writes import (audit, case_lock, confined, get_case, read_target,
+                     route_lock, version, write_json, write_route)
 
 STATIC_DIR = Path(__file__).with_name('static')
 CSP = ("default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
@@ -33,13 +37,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Security-Policy', CSP)
         super().end_headers()
 
-    def _respond(self, status, body, content_type='application/json; charset=utf-8'):
+    def _respond(self, status, body, content_type='application/json; charset=utf-8', *, file_version=None):
         if not isinstance(body, bytes):
             body = json.dumps(body, ensure_ascii=False).encode('utf-8')
         self.send_response(status)
         self.send_header('Content-Type', content_type)
         self.send_header('Content-Length', str(len(body)))
         self.send_header('Cache-Control', 'no-store')
+        if file_version is not None:
+            self.send_header('X-Perito-Versao', file_version)
         self.end_headers()
         if self.command != 'HEAD':
             self.wfile.write(body)
@@ -71,12 +77,33 @@ class Handler(BaseHTTPRequestHandler):
                 if len(tokens) != 1 or not secrets.compare_digest(tokens[0].encode('utf-8'), self.server.token.encode('utf-8')):
                     self._respond(403, {'erro': 'token inválido'})
                     return
-                if self.command != 'GET':
+                if self.command == 'GET':
+                    # Mantém conteúdo e versão no mesmo snapshot das escritas da UI.
+                    with route_lock(self.server.case_base, path):
+                        with self.server.api_lock:
+                            status, body = dispatch(self.server.case_base, url.path, parse_qs(url.query), cache=self.server.cache)
+                        target = read_target(self.server.case_base, path) if status == 200 else None
+                        file_version = version(target) if target is not None else None
+                        self._respond(status, body, file_version=file_version)
+                    return
+                match = write_route(self.command, path)
+                if match is None:
                     self._respond(405, {'erro': 'Método não permitido.'})
                     return
-                # O dispatcher faz a decodificação da rota uma única vez.
-                with self.server.api_lock:
-                    status, body = dispatch(self.server.case_base, url.path, parse_qs(url.query), cache=self.server.cache)
+                case = get_case(self.server.case_base, match[0])
+                endpoint = match[1]
+                if endpoint == 'ingestao':
+                    self._upload(case)
+                    return
+                length = self._body_length('application/json', 1024**2)
+                if length is None:
+                    return
+                payload = self.rfile.read(length)
+                if len(payload) != length:
+                    raise ValueError('Corpo incompleto.')
+                data = json.loads(payload)
+                with case_lock(case):
+                    status, body = write_json(case, endpoint, self.command, data, self.server.cache)
                 self._respond(status, body)
                 return
             if self.command != 'GET':
@@ -84,8 +111,66 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._static(path)
         except (ValueError, OSError) as exc:
-            self._respond(400 if isinstance(exc, ValueError) else 500,
+            self._respond(404 if isinstance(exc, FileNotFoundError) else 400 if isinstance(exc, ValueError) else 500,
                           {'erro': 'Erro ao atender a requisição.', 'detalhe': str(exc)})
+
+    def _body_length(self, content_type, maximum):
+        types = self.headers.get_all('Content-Type', [])
+        if len(types) != 1 or types[0].split(';', 1)[0].strip().lower() != content_type:
+            self._respond(415, {'erro': 'Content-Type inválido.'})
+            return None
+        lengths = self.headers.get_all('Content-Length', [])
+        if self.headers.get_all('Transfer-Encoding', []) or len(lengths) > 1:
+            raise ValueError('Enquadramento HTTP inválido.')
+        if not lengths:
+            self._respond(411, {'erro': 'Content-Length obrigatório.'})
+            return None
+        if not re.fullmatch(r'[0-9]+', lengths[0]):
+            raise ValueError('Content-Length inválido.')
+        length = int(lengths[0])
+        if length > maximum:
+            self._respond(413, {'erro': 'Corpo excede o limite.'})
+            return None
+        return length
+
+    def _upload(self, case):
+        from ..cli import ingest_file
+        from ..parsers import PARSERS
+        length = self._body_length('application/octet-stream', 500 * 1024**2)
+        if length is None:
+            return
+        filenames = self.headers.get_all('X-Perito-Arquivo', [])
+        name = unquote(filenames[0]) if len(filenames) == 1 else ''
+        if not re.fullmatch(r'[A-Za-z0-9._ -]{1,128}', name) or '..' in name or not name.strip(' .'):
+            raise ValueError('Nome de arquivo inválido.')
+        source = self.headers.get('X-Perito-Fonte', 'auto')
+        if source != 'auto' and source not in PARSERS:
+            raise ValueError('Fonte desconhecida.')
+        observation = self.headers.get('X-Perito-Obs', '')
+        with case_lock(case):
+            # Nem links dentro do caso podem redirecionar derivados às brutas.
+            for relative in ('evidencias/brutas', 'custodia.csv', 'normalizado', 'timeline', '.uploads', 'auditoria-ui.log'):
+                confined(case, relative)
+            directory = confined(case, '.uploads')
+            directory.mkdir(exist_ok=True)
+            temporary = directory / f'{uuid.uuid4().hex}__{name}'
+            before = version(case.custody_file)
+            try:
+                with temporary.open('xb') as fh:
+                    remaining = length
+                    while remaining:
+                        chunk = self.rfile.read(min(remaining, 1024**2))
+                        if not chunk:
+                            raise ValueError('Upload incompleto.')
+                        fh.write(chunk)
+                        remaining -= len(chunk)
+                result = ingest_file(case, temporary, source, observation)
+                result['versao'] = version(case.custody_file)
+                audit(case, 'POST ingestao', result['arquivo'],
+                      f"{result['fonte']}: {result['eventos']} eventos", before, result['versao'])
+            finally:
+                temporary.unlink(missing_ok=True)
+        self._respond(200, result)
 
     def _static(self, path):
         root = self.server.static_dir.resolve()

@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from ._network import is_external_ip
 from .case import Case
+from ._atomic import atomic_open
 from .mitre import annotate
 from .schema import Event, is_private_ip, normalize_host, normalize_user, parse_ts
 
@@ -227,6 +228,7 @@ def write_outputs(case: Case, events: list[Event]) -> dict[str, Path]:
     paths = {}
     for kind, content in contents.items():
         path = case.timeline_dir / f'timeline.{kind}'
-        path.write_text(content, encoding='utf-8', newline='')
+        with atomic_open(path) as fh:
+            fh.write(content)
         paths[kind] = path
     return paths

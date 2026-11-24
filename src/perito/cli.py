@@ -9,6 +9,7 @@ from pathlib import Path
 
 from . import case as cases
 from . import timeline
+from ._atomic import atomic_open
 from ._network import is_external_ip
 from .mitre import TECHNIQUES, annotate
 from .parsers import PARSERS, parse_file
@@ -95,24 +96,39 @@ def _full_timeline(case):
     return events
 
 
+def ingest_file(case, path, fonte='auto', obs='', *, rebuild=True):
+    """Custodia um arquivo e normaliza sempre a cópia bruta registrada."""
+    if fonte != 'auto' and fonte not in PARSERS:
+        raise ValueError('Fonte desconhecida.')
+    raw = cases.add_evidence(case, path, fonte=fonte, observacao=obs)
+    source = detect_source(raw) if fonte == 'auto' else fonte
+    stats = {}
+    count = 0
+    if source:
+        normalized = case.normalized_dir / f'{source}__{raw.stem}.jsonl'
+        with atomic_open(normalized) as fh:
+            for ev in parse_file(raw, source, stats):
+                fh.write(annotate(ev).to_json() + '\n')
+                count += 1
+    if rebuild:
+        _full_timeline(case)
+    digest = next(r['sha256'] for r in cases.read_custody(case) if r['arquivo'] == raw.name)
+    result = dict(ok=True, arquivo=raw.name, fonte=source or 'desconhecida',
+                  eventos=count, ignorados=stats.get('ignorados', 0), sha256=digest,
+                  detectado=bool(source))
+    if not source:
+        result['mensagem'] = 'registrado na custódia, sem parser'
+    return result
+
+
 def _ingest(case, args):
     rows = []
     # Materialize antes de escrever para não enumerar arquivos recém-gerados.
     for path in list(_paths(args.caminhos)):
-        raw = cases.add_evidence(case, path, fonte=args.fonte, observacao=args.obs)
-        source = detect_source(raw) if args.fonte == 'auto' else args.fonte
-        stats = {}
-        count = 0
-        if source:
-            normalized = case.normalized_dir / f'{source}__{raw.stem}.jsonl'
-            with normalized.open('w', encoding='utf-8', newline='\n') as fh:
-                for ev in parse_file(raw, source, stats):
-                    fh.write(annotate(ev).to_json() + '\n')
-                    count += 1
-        else:
-            print(f'Aviso: fonte não detectada em {raw.name}; evidência registrada, sem normalização.', file=sys.stderr)
-        digest = next(r['sha256'] for r in cases.read_custody(case) if r['arquivo'] == raw.name)
-        rows.append((raw.name, source or 'desconhecida', count, stats.get('ignorados', 0), digest[:12]))
+        result = ingest_file(case, path, args.fonte, args.obs, rebuild=False)
+        if not result['detectado']:
+            print(f"Aviso: fonte não detectada em {result['arquivo']}; evidência registrada, sem normalização.", file=sys.stderr)
+        rows.append((result['arquivo'], result['fonte'], result['eventos'], result['ignorados'], result['sha256'][:12]))
     _full_timeline(case)
     print(_table(['Arquivo', 'Fonte', 'Eventos', 'Ignorados', 'SHA-256'], rows), end='')
     return 0
