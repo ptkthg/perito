@@ -10,4 +10,4 @@ Desvios documentados: as amostras começam às **10:00Z**, incluem também `ws-f
 
 `schema.py`, `case.py`, `samples/` e as specs foram preservados.
 
-Resultados: [01](/D:/Perito/docs/tasks/01-resultado.md), [02](/D:/Perito/docs/tasks/02-resultado.md) e [03](/D:/Perito/docs/tasks/03-resultado.md).
+Resultados: [01](01-resultado.md), [02](02-resultado.md) e [03](03-resultado.md).

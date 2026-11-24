@@ -4,4 +4,4 @@ Backend com staging, rotas, aplicação seletiva, logs e cancelamento implementa
 
 **Testes:** 178 passaram; somente stubs, sem provedores reais.
 
-Detalhes em [07-resultado.md](/D:/Perito/docs/tasks/07-resultado.md).
+Detalhes em [07-resultado.md](07-resultado.md).

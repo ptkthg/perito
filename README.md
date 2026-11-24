@@ -5,7 +5,7 @@ Kit de **Resposta a Incidentes / DFIR** para usar com **Claude Code** e **Codex*
 **Fontes suportadas:** Microsoft Defender XDR (Advanced Hunting), Microsoft Sentinel (SecurityEvent, SigninLogs, AuditLogs, SecurityAlert, CommonSecurityLog, Device*), Entra ID (sign-in e audit), Splunk (Sysmon, Windows Security, firewall/proxy), Elastic (ECS) e Wazuh (alerts.json).
 
 ## Como usar
-Abra o Claude Code (`claude`) ou o Codex (`codex`) em `D:\Perito` e peça em linguagem natural. As skills são carregadas automaticamente:
+Abra o Claude Code (`claude`) ou o Codex (`codex`) na raiz do repositório e peça em linguagem natural. As skills são carregadas automaticamente:
 
 | Você diz | Skill |
 |---|---|
@@ -47,4 +47,4 @@ uv run perito ingerir TREINO-01 samples/caso-sintetico
 Investigue com as skills e compare suas conclusões com `samples/caso-sintetico/GABARITO.md`.
 
 ## Desenvolvimento com Claude × Codex
-Specs em `docs/tasks/NN-*.md`. Um agente implementa (`codex exec -C D:\Perito -s workspace-write ...`) e o outro revisa o diff, roda os testes e faz o commit.
+Specs em `docs/tasks/NN-*.md`. Um agente implementa (`codex exec -C . -s workspace-write ...`) e o outro revisa o diff, roda os testes e faz o commit.
