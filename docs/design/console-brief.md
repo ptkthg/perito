@@ -208,3 +208,181 @@ A referência é um painel de subestação, não um filme sobre hackers.
   | ciano | `#0B6A7A` |
 
   Todos ficam acima de 4,5:1. Na impressão, o histograma usa padrões em vez de cor, e os glifos ■ ◇ ⊘ mantêm a forma.
+
+---
+
+# Adendo (§9–§11): Mapa, Bancada e Agentes
+
+> Autor: ui-ux-designer. Decisões aceitas por Claude:
+> - no mapa, o 1º clique seleciona e o 2º clique ou `Enter`/`p` pivota;
+> - agentes trabalham em **rascunho (staging)**, e nada entra no caso sem `[a]` aplicar;
+> - o build verifica a cobertura dos glifos na Iosevka.
+>
+> Convenções do código prevalecem sobre os exemplos ilustrativos abaixo: IDs são `A15` e `H3` (não `A-007`/`H-03`), e a corroboração é **`≡n`** (o ⧉ não existe na Iosevka).
+
+## 9. MAPA DO ATAQUE (`gm`, comando `mapa`)
+
+### 9.1 Layout determinístico
+- **Colunas:** 4 colunas fixas em `ch`: ENTRADA 22 │ REDE INTERNA 32 │ NUVEM 24 │ SAÍDA 28. Entre elas há canais de 8ch para as arestas.
+- **Posição:** a coluna vem do campo `coluna` do nó. Dentro dela, a ordem é `(no caminho desc, relevante desc, primeira asc, id asc)`, então os mesmos dados geram sempre o mesmo desenho.
+- **Nós:** altura fixa de 3 linhas (60px), alinhados à grade entre colunas.
+- **Proibido:** física, d3-force e pan/zoom animado. Só há rolagem vertical, e o zoom é a densidade.
+- **Implementação:** CSS grid para os nós e uma camada SVG para as arestas.
+
+### 9.2 Forma dos nós (a borda é a forma; o rótulo do tipo fica na borda superior)
+| Tipo | Borda |
+|---|---|
+| HOST | `┌─┐` 1px sólida |
+| CONTA | `╔═╗` 3px double (credencial é o ativo mais valioso) |
+| APP | `┏━┓` 2px |
+| E-MAIL | `╎╌╎` 1px pontilhada |
+| IP/DOMÍNIO | sem caixa, `›` com barra esquerda |
+
+- **Sem EDR:** fundo hachurado (como `[LIM]`) e `⊘ SEM EDR` em vermelho na borda.
+- **Técnicas:** só a contagem (`6 técn.`).
+- **Grupo:** `+12 IPs de ruído`, em `--text-3`.
+
+### 9.3 Arestas
+- **Traçado:** ortogonais, com até 2 dobras, roteadas pelos canais. No cruzamento, a de menor prioridade ganha uma ponte de 4px.
+- **Direção:** ponta triangular sólida de 6px no destino. Arestas paralelas ficam separadas por 4px.
+- **Passo do ataque:** chip `[n]` invertido (preto sobre âmbar) no canal. Não usar ①②③.
+- **Cores:**
+  - caminho do atacante: 2px âmbar;
+  - ruído: 1px `--text-3`;
+  - só falhas: tracejado;
+  - mistas: `✕3 ✓2`;
+  - volume: `▲2,4 GB` em vermelho.
+- **Rótulo completo:** fica na lista CAMINHO, abaixo do mapa. Na aresta só aparecem o chip e uma métrica.
+
+### 9.4 Interação
+- **Teclado:** o mapa é um widget composto com uma parada de Tab.
+
+  | Tecla | Ação |
+  |---|---|
+  | ←→ | coluna |
+  | ↑↓ | nó |
+  | `n`/`N` | passo do caminho |
+  | `.`/`,` | arestas do nó |
+  | `c` | só o caminho |
+  | `+`/`-` | grupo |
+  | Tab | vai para a lista CAMINHO |
+
+- **Hover:** destaca as arestas do nó e apaga o resto. Sem tooltip flutuante.
+- **Clique em nó:** o 1º clique seleciona (cabeçalho invertido âmbar, detalhe na faixa fixa à direita). O 2º clique, `Enter` ou `p` pivota no F2, com `[Backspace] ◀ MAPA` para voltar.
+- **Clique em aresta ou em `[n]`:** abre o F1 com os eventos da aresta. O alvo do chip tem 24px e a linha tem área invisível de 12px.
+- **Foco:** outline ciano de 2px.
+
+### 9.5 GUIADO × ANALISTA
+| | GUIADO | ANALISTA |
+|---|---|---|
+| Cabeçalho das colunas | com subtítulo ("de onde veio") | só o nome |
+| CAMINHO | frase com técnica em português | `T1021.001` + primeira/última vez |
+| Legenda | fixa | no `?` |
+| Ruído | recolhido | visível |
+
+### 9.6 Escala
+- Até 8 nós por coluna. Nós relevantes e nós do caminho nunca são agrupados.
+- O resto vira grupo por tipo, com as arestas agregadas.
+- Acima de 80 nós, sugerir na linha de status `> mapa --desde 13:00 --host ...`.
+
+### 9.7 Mapa do caso exemplo (GUIADO, horários ilustrativos)
+```
+ENTRADA               │ REDE INTERNA                   │ NUVEM                  │ SAÍDA
+de onde veio          │ máquinas e contas da empresa   │ Microsoft 365 / Entra  │ para onde foram os dados
+━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ┌╌MAIL╌╌╌╌╌╌╌╌╌╌╌╌╌┐ ┊      ╔═CONTA════════════╗      ┊                        ┊
+ ╎ Fatura_88213.xlsm╎─[1]───▶║ m.silva          ║      ┊                        ┊
+ └╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┘ ┊      ╚════════╤═════════╝      ┊                        ┊
+                      ┊               │ [2] logon      ┊                        ┊
+                      ┊      ┌─HOST─────────────┐      ┊                        ┊ › DOMÍNIO · externo
+                      ┊      │ ws-fin-023       │──────────────[3]──────────────▶ cdn-update.example-cdn.net
+                      ┊      └────────┬─────────┘      ┊                        ┊
+                      ┊               │ [6] RDP        ┊                        ┊
+                      ┊      ┌─HOST─⊘ SEM EDR───┐      ┊                        ┊ › DOMÍNIO · externo
+                      ┊      │░srv-file-01░░░░░░│──[7]──▲2,5 GB─────────────────▶ bkp.example-storage.net
+                      ┊      └──────────────────┘      ┊                        ┊
+ › IP · externo       ┊                                ┊  ╔═CONTA════════════╗  ┊
+   198.51.100.77 ──────[4]──── ✕3 ✓2 ────────────────────▶║ m.silva (nuvem)  ║  ┊
+                      ┊                                ┊  ╚════════╤═════════╝  ┊
+                      ┊                                ┊           │ [5] consent┊
+                      ┊                                ┊  ┏━APP━━━━━━━━━━━━━━┓  ┊
+                      ┊                                ┊  ┃ MailSync Pro     ┃  ┊
+                      ┊                                ┊  ┗━━━━━━━━━━━━━━━━━━┛  ┊
+CAMINHO DO ATACANTE (ordem cronológica)                         [n] próximo passo · [Enter] ver eventos
+ [1] 13:02  e-mail com anexo Fatura_88213.xlsm chegou para m.silva     E-mail com anexo malicioso
+ ...
+LEGENDA ┌─┐ máquina  ╔═╗ conta  ┏━┓ aplicativo  ╎╌╎ e-mail  › endereço externo  [n] passo do ataque
+        ⊘ sem EDR  ▲ volume alto  ✕ falha  ✓ sucesso  ≡n confirmado por n fontes
+```
+
+### 9.8 Versão compacta (F0)
+Mostra só os nós do caminho, sem caixas, numa linha de cabeçalho `MAPA DO ATAQUE · 7 passos · 1 máquina sem EDR · 2,5 GB saíram [gm] abrir mapa`. Clicar abre o MAPA com o passo em foco.
+
+## 10. BANCADA (formulários inline)
+
+**Regras gerais:**
+- A bancada abre **no painel de detalhe**, que se alarga para 60 colunas. A timeline continua visível.
+- **Teclas:** `Tab` entre campos, `Espaço` alterna chip, `Ctrl+Enter` salva.
+- **`Esc`:** se houver texto digitado, o primeiro `Esc` avisa e o segundo descarta.
+- **Validação:** só ao salvar, exceto o contador de caracteres. O botão nunca fica desabilitado. Ao falhar, o foco vai para o primeiro campo inválido, com `✕ motivo` abaixo dele.
+- **Linha de status:** `GLIFO VERBO OBJETO → DESTINO` (ex.: `✓ ACHADO A15 gravado → achados.md · [o] abrir no F6`).
+  - A mensagem fica até a próxima ação, sem timer.
+  - Sucesso em `aria-live=polite`, erro em `assertive`.
+- **GUIADO:** ajuda sob cada rótulo e botões escritos. **ANALISTA:** só as teclas.
+
+**Promover a achado (`a`):**
+- **Tag:** ■EVIDÊNCIA fixa.
+- **Texto:** pré-preenchido com os fatos do evento, sem adjetivos, mínimo de 20 caracteres.
+- **Técnicas:** chips com as sugestões. Marcar uma técnica a confirma no app inteiro (o `?` some).
+- **raw_ref:** somente leitura.
+
+**Vincular a hipótese (`H`):**
+- Lista filtrável de hipóteses, com a relação **(•) apoia / ( ) contradiz** obrigatória.
+- `[n]` cria uma hipótese nova a partir do evento.
+
+**Status/confiança (F6):**
+- **Teclas:** `[1]ABERTA [2]CONFIRMADA [3]REFUTADA [4]INCONCLUSIVA` e `[b]BAIXA [m]MÉDIA [l]ALTA`.
+- **Justificativa:** obrigatória para confirmar ou refutar.
+- **Confirmar** exige pelo menos 1 evento "apoia" e depois oferece `[a] gerar achado`.
+- **Refutar** sem nenhum evento "contradiz": a linha de status avisa, mas não bloqueia.
+
+**IOC (F4):**
+- `a` aprova e `d` descarta, com motivo obrigatório: falso positivo, infraestrutura legítima, interno ou outro (com texto).
+- `m` marca linhas para ação em lote.
+
+**INGERIR:** atômica por arquivo.
+```
+ociosa      ┌╌ INGERIR ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┐
+            ╎ solte exportações aqui ou [i] escolher arquivos      ╎
+            └╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┘
+arrastando  borda 2px âmbar sólida · "SOLTE PARA INGERIR 3 ITENS"
+enviando    INGERINDO 2/3 defender.csv ▮▮▮▮▮▮▯▯▯▯ 61% 412/680 MB 00:00:14   (fila com ✓ ▸ ·)
+resultado   ARQUIVO  FONTE  EVENTOS  JANELA (UTC)  AVISOS  SHA-256   (+ ⊘ lacuna → [l] registrar LIM)
+erro        ✕ E-FORMATO arquivo:linha · nada deste arquivo foi gravado · [x] ver linha bruta [r] tentar de novo
+```
+
+**Conflito 409:** o texto do analista nunca se perde e não existe "sobrescrever". A tela mostra quem mudou e quando, um diff mínimo e as opções `[r] recarregar e reaplicar meu texto`, `[d] diff completo` e `[Esc] manter bancada`.
+
+## 11. PAINEL AGENTES (`ga`, comando `agentes`)
+
+**Escolha:**
+- **Ação:** teclas `1`–`6` (Resumo, Relatório executivo, Relatório técnico, Nota DPO/Jurídico, Revisão cruzada, Investigar fase).
+- **Agente:** `←`/`→` (CLAUDE · Anthropic, CODEX · OpenAI). A revisão cruzada usa os dois.
+
+**Aviso de envio:**
+- Sempre visível e não pode ser fechado.
+- Lista os arquivos enviados, o tamanho total e os provedores, e diz que há nomes de usuário, hosts, IPs e e-mails.
+- O checkbox **"Autorizo o envio deste caso a esses provedores nesta sessão"** vale por caso e por provedor durante a sessão.
+- `Ctrl+Enter` sem a autorização leva o foco ao checkbox e mostra `✕ autorize o envio`.
+
+**Instrução extra:** opcional, até 500 caracteres, com contador.
+
+**Execução:**
+- Cabeçalho com o cronômetro de cada agente. Log em texto com tempo relativo (`+00:31.8 ...`).
+- `sem saída há N s` substitui o spinner.
+- A rolagem acompanha o log. Se o analista rolar para cima, aparece `▼ 14 linhas novas [End]`.
+- `Ctrl+C` cancela.
+
+**Fim:** `✓ CONCLUÍDO ... · nada aplicado ainda`, seguido da tabela ARQUIVO │ MUDANÇA (+/−) │ TAGS (■ ◇ ⊘ e `✕ n afirmações sem tag`) e do diff. Teclas: `[a] aplicar marcados`, `[Espaço] marcar`, `[Enter] diff`, `[d] descartar` e `[g8] conciliação`.
+
+**Erro:** `✕ E-PROVEDOR <agente> parou em +01:20 · <motivo>`. Abaixo dele vêm "nada foi gravado no caso", o caminho do log, a explicação em linguagem simples (no GUIADO) e as opções `[r] tentar de novo`, `[l] abrir log` e `[Esc]`.

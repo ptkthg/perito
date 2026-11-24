@@ -33,10 +33,12 @@
 
 ### `POST /api/casos/{id}/hipoteses` e `PATCH /api/casos/{id}/hipoteses/{Hn}`
 - **POST (nova hipótese):** `{"titulo", "confianca", "sustentacao"?, "confirmaria"?, "refutaria"?, "proximo_passo"?, "fase"?, "versao"}`. Acrescenta `## H<n+1>: <titulo>` com os bullets no formato do esqueleto e `Status: aberta`. Se o arquivo só tiver o placeholder `## H1: <título>` do esqueleto, substitua o placeholder.
-- **PATCH:** `{"status"?, "confianca"?, "proximo_passo"?, "refs_add"?: ["raw_ref" | "A6"], "versao"}`.
+- **PATCH:** `{"status"?, "confianca"?, "proximo_passo"?, "justificativa"?, "refs_add"?: [{"ref": "raw_ref | A6", "relacao": "apoia|contradiz"}], "versao"}`.
   - Altera **no lugar** apenas os bullets correspondentes da seção `## Hn:`.
   - Bullet ausente: crie-o no fim da seção.
-  - `refs_add` acrescenta ` [EVIDÊNCIA] <ref>` ao bullet `Sustentação`, sem duplicar.
+  - `refs_add` com `apoia` acrescenta ` [EVIDÊNCIA] <ref>` ao bullet `Sustentação`; com `contradiz`, acrescenta ao bullet `Contradiz:`, criado se não existir. Nos dois casos, sem duplicar.
+  - `status` = `confirmada` ou `refutada` exige `justificativa` (senão 400). Ela é gravada no bullet `Justificativa:` com o carimbo UTC. `confirmada` também exige pelo menos um ref em `Sustentação`, existente ou no mesmo PATCH (senão 400).
+  - O parser de `/hipoteses` passa a expor `contradiz` (texto) e `justificativa`.
   - O resto do arquivo fica **byte a byte igual** (com teste).
 - **Validação:**
   - `status` ∈ {aberta, confirmada, refutada, inconclusiva};
@@ -45,8 +47,14 @@
 
 ### `POST /api/casos/{id}/iocs` e `PATCH /api/casos/{id}/iocs`
 - **POST:** `{"tipo", "valor", "primeira_vez_utc"?, "ultima_vez_utc"?, "fonte"?, "contexto"?, "confianca"?: "candidato", "versao"}`. Acrescenta em `iocs.csv` (cabeçalho `case.IOC_HEADER`). O par `(tipo, valor)` já existente → 200 com `{"ok": true, "existente": true}`, sem duplicar.
-- **PATCH:** `{"tipo", "valor", "confianca": "candidato|confirmado|descartado", "versao"}`. Altera só a coluna `confianca` da linha. Linha inexistente → 404.
+- **PATCH:** `{"tipo", "valor", "confianca": "candidato|confirmado|descartado", "motivo"?, "versao"}`. Altera só a coluna `confianca` da linha. Linha inexistente → 404.
+  - `descartado` exige `motivo` ∈ {`falso positivo`, `infraestrutura legítima`, `interno`, `outro: <texto até 200>`}, senão 400.
+  - O motivo vai para o fim da coluna `contexto`, como ` · descartado: <motivo>`.
+  - **Lote:** `{"itens": [{tipo, valor, confianca, motivo?}, ...], "versao"}` aplica todos ou nenhum.
 - **`tipo`** ∈ {ip, dominio, sha256, arquivo, email, url}.
+
+### `GET /api/formatos`
+Lista as fontes aceitas na ingestão, para a zona INGERIR: `[{"fonte": "defender", "descricao": "Defender XDR Advanced Hunting (CSV/JSON)"}, ...]`.
 
 ### `POST /api/casos/{id}/limitacoes`
 - **Corpo:** `{"limitacao", "impacto", "mitigacao", "versao"}` (3 a 400 caracteres cada).
