@@ -258,6 +258,7 @@ export interface ApiErroBody {
 export type Visao =
   | 'visao'
   | 'mapa'
+  | 'agentes'
   | 'timeline'
   | 'entidades'
   | 'attack'

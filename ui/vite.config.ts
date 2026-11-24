@@ -8,6 +8,8 @@ import react from '@vitejs/plugin-react';
 
 const env = (globalThis as unknown as { process: { env: Record<string, string | undefined> } }).process.env;
 const token = env.PERITO_UI_TOKEN;
+// Alvo da API no dev (padrão 8765). Use PERITO_UI_API=http://127.0.0.1:8766 para um servidor de teste com stubs.
+const alvo = env.PERITO_UI_API || 'http://127.0.0.1:8765';
 
 export default defineConfig({
   plugins: [react()],
@@ -26,7 +28,7 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8765',
+        target: alvo,
         changeOrigin: true,
         headers: token ? { 'X-Perito-Token': token } : {},
       },

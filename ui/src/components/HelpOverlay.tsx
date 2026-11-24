@@ -33,6 +33,12 @@ const TECLAS: [string, string][] = [
   ['mapa: ←→ ↑↓', 'coluna · nó; 1º clique seleciona, 2º clique/Enter/p pivota na F2'],
   ['mapa: n/N . , c + -', 'passo do caminho · arestas do nó · só o caminho · expandir/recolher grupo'],
   ['F2: Backspace', 'volta ao MAPA quando o pivô veio dele'],
+  ['ga · agentes', 'PAINEL AGENTES: 1–6 ação · ←/→ agente · Ctrl+Enter executa · Ctrl+C cancela · h histórico'],
+  ['agentes (fim)', 'Espaço marca · a aplica marcados · d descarta · Enter diff · End rola o log · r tenta de novo'],
+  ['F3 ATT&CK', '←→↑↓ técnica · Enter abre a F1 filtrada (tecnica=T…); tracejado = sugerida, sólido = confirmada'],
+  ['F5 COBERTURA', 'j/k lacuna · l registrar LIM (formulário pré-preenchido) · i ingerir'],
+  ['F8 REVISÃO', 'n/N divergências (≠) da conciliação · r revisão cruzada'],
+  ['F9 RELATÓRIOS', 'pré-visualização de impressão · Ctrl+P imprime só o papel'],
   ['F2 · j/k h/l ↵ f y /', 'entidades: item · coluna · pivô · filtro · copia · filtra a lista'],
   ['F6 · ↵ · clique em ref', 'hipóteses/achados: abre as evidências (A6, arquivo.csv:15-17) na timeline'],
   ['n / N (após ref)', 'percorre os eventos destacados vindos de uma ref; Esc limpa'],
@@ -127,8 +133,8 @@ export function HelpOverlay({ onClose }: { onClose(): void }) {
             <div>
               <dt className="t2">tatica (local)</dt>
               <dd>
-                filtro tatica=ENTRADA · tatica=SAÍDA-DE-DADOS · tatica!=DISFARCE — aplicado no navegador sobre os eventos carregados (o servidor não conhece
-                táticas)
+                filtro tatica=ENTRADA · tatica=SAÍDA-DE-DADOS · tatica!=DISFARCE · tecnica=T1059 (inclui subtécnicas) · tecnica!=T1027 — aplicados no navegador
+                sobre os eventos carregados (o servidor não conhece táticas/técnicas como filtro)
               </dd>
             </div>
           </dl>

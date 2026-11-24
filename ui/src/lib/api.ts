@@ -22,6 +22,7 @@ import { compileQuery, queryString } from './filters';
 import { tsMs } from './format';
 import type { Grafo } from './graph';
 import { type Conflito, parseConflito } from './bancada';
+import type { Disponiveis, JobEstado } from './agentes';
 
 export interface Formato {
   fonte: string;
@@ -90,6 +91,15 @@ export interface PeritoApi {
   patchIoc(id: string, b: Record<string, unknown>): Promise<EscritaOk>;
   criarLimitacao(id: string, b: { limitacao: string; impacto: string; mitigacao: string }): Promise<EscritaOk>;
   ingerir(id: string, f: File, opts: { fonte?: string; obs?: string }, progresso?: (enviados: number, total: number) => void): Promise<IngestaoResult>;
+  // ---- agentes (spec 07)
+  agentesDisponiveis(): Promise<Disponiveis>;
+  /** POST só depois do aviso de envio aceito (manda X-Perito-Aviso-Envio: aceito). */
+  iniciarAgente(id: string, b: { acao: string; agente: string; parametro?: string; instrucao_extra?: string }): Promise<{ ok: true; job: string; status: string }>;
+  job(job: string, desde?: number): Promise<JobEstado>;
+  cancelarJob(job: string): Promise<{ ok: true }>;
+  aplicarJob(job: string, arquivos: string[]): Promise<{ ok: true; arquivos: string[] }>;
+  descartarJob(job: string): Promise<{ ok: true }>;
+  historicoAgentes(id: string): Promise<JobEstado[]>;
 }
 
 // ---------------------------------------------------------------- versões (X-Perito-Versao)
@@ -200,6 +210,35 @@ class RealApi implements PeritoApi {
     );
     setVersao(caso, arq, r.data.versao);
     return r.data;
+  }
+  private async post<T>(path: string, body: unknown, extra: Record<string, string> = {}): Promise<T> {
+    const r = await request<T>(`/api${path}`, {
+      method: 'POST',
+      headers: { ...this.headers(), 'Content-Type': 'application/json', ...extra },
+      body: JSON.stringify(body ?? {}),
+    });
+    return r.data;
+  }
+  agentesDisponiveis() {
+    return this.get<Disponiveis>('/agentes/disponiveis');
+  }
+  iniciarAgente(id: string, b: { acao: string; agente: string; parametro?: string; instrucao_extra?: string }) {
+    return this.post<{ ok: true; job: string; status: string }>(`/casos/${enc(id)}/agentes`, b, { 'X-Perito-Aviso-Envio': 'aceito' });
+  }
+  job(job: string, desde = 0) {
+    return this.get<JobEstado>(`/agentes/${enc(job)}?desde=${desde}`);
+  }
+  cancelarJob(job: string) {
+    return this.post<{ ok: true }>(`/agentes/${enc(job)}/cancelar`, {});
+  }
+  aplicarJob(job: string, arquivos: string[]) {
+    return this.post<{ ok: true; arquivos: string[] }>(`/agentes/${enc(job)}/aplicar`, { arquivos });
+  }
+  descartarJob(job: string) {
+    return this.post<{ ok: true }>(`/agentes/${enc(job)}/descartar`, {});
+  }
+  historicoAgentes(id: string) {
+    return this.get<JobEstado[]>(`/casos/${enc(id)}/agentes`);
   }
   grafo(id: string, relevantes = false) {
     return this.get<Grafo>(`/casos/${enc(id)}/grafo${relevantes ? '?relevantes=1' : ''}`);
@@ -422,6 +461,27 @@ class FixturesApi implements PeritoApi {
   }
   ingerir(): Promise<IngestaoResult> {
     return Promise.reject(this.erroRO());
+  }
+  async agentesDisponiveis(): Promise<Disponiveis> {
+    return { claude: false, codex: false, acoes: [] };
+  }
+  iniciarAgente(): Promise<{ ok: true; job: string; status: string }> {
+    return Promise.reject(this.erroRO());
+  }
+  job(): Promise<JobEstado> {
+    return Promise.reject(this.erroRO());
+  }
+  cancelarJob(): Promise<{ ok: true }> {
+    return Promise.reject(this.erroRO());
+  }
+  aplicarJob(): Promise<{ ok: true; arquivos: string[] }> {
+    return Promise.reject(this.erroRO());
+  }
+  descartarJob(): Promise<{ ok: true }> {
+    return Promise.reject(this.erroRO());
+  }
+  async historicoAgentes(): Promise<JobEstado[]> {
+    return [];
   }
   private erroRO(): ApiError {
     return new ApiError(0, 'modo fixtures é somente leitura', 'fixtures', 'rode com a API real (perito ui) para gravar');

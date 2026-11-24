@@ -5,6 +5,7 @@ import type { Visao } from './types';
 export const VISOES: { key: Visao; tecla: string; rotulo: string; entrega: string }[] = [
   { key: 'visao', tecla: 'F0', rotulo: 'VISÃO GERAL', entrega: 'I1' },
   { key: 'mapa', tecla: 'gm', rotulo: 'MAPA', entrega: 'E2' },
+  { key: 'agentes', tecla: 'ga', rotulo: 'AGENTES', entrega: 'E5' },
   { key: 'timeline', tecla: 'F1', rotulo: 'TIMELINE', entrega: 'I1' },
   { key: 'entidades', tecla: 'F2', rotulo: 'ENTIDADES', entrega: 'I2' },
   { key: 'attack', tecla: 'F3', rotulo: 'ATT&CK', entrega: 'I3' },

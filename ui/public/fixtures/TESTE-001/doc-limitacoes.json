@@ -1,0 +1,7 @@
+{
+ "nome": "limitacoes",
+ "grupo": "caso",
+ "conteudo": "# Limitações: TESTE-001\n\n| # | Limitação | Impacto na conclusão | Como mitigar |\n|---|---|---|---|\n| L1 | O conteúdo exato exfiltrado não está nos logs; há só volume (FW) e origem (`D:\\Financeiro` na linha de comando) | Não é possível listar os arquivos nem confirmar se havia dados pessoais | Inventário de `D:\\Financeiro`; auditoria 5145 se habilitada (Q6.6); rclone.conf/logs locais |\n| L2 | Sem log de caixa de correio (UAL/MailItemsAccessed) | Uso do app OAuth MailSync Pro e acesso ao e-mail de m.silva não avaliados | Exportar OfficeActivity/UAL (Q7.5, Q7.6, Q7.7) |\n| L3 | Log de Segurança de srv-file-01 limpo às 14:31 | Eventos locais posteriores ao último encaminhamento ao Sentinel podem estar perdidos | Comparar o último evento no Sentinel com o horário da limpeza; coletar o Sysmon local |\n",
+ "mtime": "2026-11-24T15:03:40.010Z",
+ "versao": "1795532620010462000-825"
+}

@@ -26,6 +26,10 @@ import { Ioc } from '../views/ioc/Ioc';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Ingest, type IngestHandle } from './Ingest';
 import { AttackMap } from '../views/map/AttackMap';
+import { AgentsView, type PresetAgente } from '../views/agents/AgentsView';
+import { AttackMatrix } from '../views/attack/AttackMatrix';
+import { Coverage } from '../views/coverage/Coverage';
+import { Escopo, Relatorios, Revisao } from '../views/docs/Docs';
 import { ConfContext } from '../lib/conf';
 import { indexaConfirmadas } from '../lib/bancada';
 import { expandRefs } from '../lib/refs';
@@ -87,6 +91,14 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
   const [entFoco, setEntFoco] = useState<{ kind: EKind; valor: string } | null>(null);
   const [veioDoMapa, setVeioDoMapa] = useState(false);
   const ingestRef = useRef<IngestHandle>(null);
+  const [agentePreset, setAgentePreset] = useState<PresetAgente | null>(null);
+  const abrirAgentes = useCallback(
+    (acao: string) => {
+      setAgentePreset({ acao });
+      navigate(caso, 'agentes');
+    },
+    [caso],
+  );
   const [help, setHelp] = useState(false);
   const [dens, setDens] = useState<Densidade>(loadDensidade);
   const [tema, setTema] = useState(loadTema);
@@ -299,6 +311,9 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
         case 'mapa':
           navigate(caso, 'mapa');
           break;
+        case 'agentes':
+          navigate(caso, 'agentes');
+          break;
       }
       return true;
     },
@@ -504,6 +519,11 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
           navigate(caso, 'mapa');
           return;
         }
+        if (e.key === 'a') {
+          e.preventDefault();
+          navigate(caso, 'agentes');
+          return;
+        }
       } else if (e.key === 'g') {
         e.preventDefault();
         gPending.current = window.setTimeout(clearG, 1200);
@@ -645,7 +665,8 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
                 setMapaFoco(p);
                 navigate(caso, 'mapa');
               }}
-              ingest={<Ingest ref={ingestRef} caso={caso} modo={modo} onConcluido={recarregar} onMsg={say} />}
+              ingest={<Ingest ref={ingestRef} caso={caso} modo={modo} onConcluido={recarregar} onMsg={say} onEscrito={(m) => onEscrito(m, [])} />}
+              onAgente={abrirAgentes}
             />
             </ErrorBoundary>
           </div>
@@ -690,17 +711,73 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
             </ErrorBoundary>
           </div>
         )}
+        {visao === 'agentes' && (
+          <div className="view-slot view-scroll">
+            <ErrorBoundary label="AGENTES" chave="agentes">
+              <AgentsView
+                ref={viewRef}
+                caso={caso}
+                modo={modo}
+                rev={rev}
+                resumo={resumo}
+                entidades={entidades}
+                preset={agentePreset}
+                onAplicado={(m) => onEscrito(m, [])}
+                onMsg={say}
+                onConciliacao={() => navigate(caso, 'revisao')}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
         {visao === 'cobertura' && (
           <div className="view-slot view-scroll">
             <ErrorBoundary label="COBERTURA" chave="cobertura">
-              <section className="ov-sec">
-                <h2 className="lbl ov-h">F5 COBERTURA ▮ INGERIR</h2>
-                <p className="t2">
-                  a matriz fonte × tempo e fonte × host ainda está <span className="lbl amber">PENDENTE</span>; enquanto isso, ingira evidências aqui ([i] escolher
-                  arquivos).
-                </p>
-                <Ingest ref={ingestRef} caso={caso} modo={modo} onConcluido={recarregar} onMsg={say} />
-              </section>
+              <Coverage
+                ref={viewRef}
+                caso={caso}
+                modo={modo}
+                rev={rev}
+                resumo={resumo}
+                onMsg={say}
+                onEscrito={(m) => onEscrito(m, [])}
+                ingest={<Ingest ref={ingestRef} caso={caso} modo={modo} onConcluido={recarregar} onMsg={say} onEscrito={(m) => onEscrito(m, [])} />}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
+        {visao === 'attack' && (
+          <div className="view-slot view-scroll">
+            <ErrorBoundary label="ATT&CK" chave="attack">
+              <AttackMatrix
+                ref={viewRef}
+                resumo={resumo}
+                modo={modo}
+                onTecnica={(id) => {
+                  applyFilter({ clauses: [{ field: 'tecnica', neg: false, value: id }], de: null, ate: null }, `filtro tecnica=${id} (F3) · u desfaz`);
+                  navigate(caso, 'timeline');
+                }}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
+        {visao === 'escopo' && (
+          <div className="view-slot view-scroll">
+            <ErrorBoundary label="ESCOPO" chave="escopo">
+              <Escopo caso={caso} rev={rev} modo={modo} onAgente={abrirAgentes} />
+            </ErrorBoundary>
+          </div>
+        )}
+        {visao === 'revisao' && (
+          <div className="view-slot">
+            <ErrorBoundary label="REVISÃO" chave="revisao">
+              <Revisao ref={viewRef} caso={caso} rev={rev} modo={modo} onAgente={abrirAgentes} onMsg={say} />
+            </ErrorBoundary>
+          </div>
+        )}
+        {visao === 'relatorios' && (
+          <div className="view-slot view-scroll">
+            <ErrorBoundary label="RELATÓRIOS" chave="relatorios">
+              <Relatorios caso={caso} rev={rev} resumo={resumo} onAgente={abrirAgentes} />
             </ErrorBoundary>
           </div>
         )}
@@ -737,7 +814,9 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
             </ErrorBoundary>
           </div>
         )}
-        {!['timeline', 'visao', 'entidades', 'hipoteses', 'ioc', 'mapa', 'cobertura'].includes(visao) && <PendingView visao={visao} />}
+        {!['timeline', 'visao', 'entidades', 'hipoteses', 'ioc', 'mapa', 'cobertura', 'agentes', 'attack', 'escopo', 'revisao', 'relatorios'].includes(visao) && (
+          <PendingView visao={visao} />
+        )}
       </main>
       <footer className="bottom">
         <div className={`msg msg-${msg.kind}`} role="status" aria-live={msg.kind === 'err' ? 'off' : 'polite'} aria-atomic="true">

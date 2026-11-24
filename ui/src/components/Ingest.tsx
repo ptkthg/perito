@@ -10,6 +10,8 @@ import { ApiError, type Formato, type IngestaoResult, api, describeError } from 
 import type { Modo } from '../lib/mode';
 import { formatBytes, sourceCode, sourceColor } from '../lib/format';
 import type { MsgKind } from '../lib/msg';
+import { LimForm } from '../views/bench/LimForm';
+import { prefillSemParser } from '../lib/cobertura';
 
 export interface IngestHandle {
   escolher(): void;
@@ -21,6 +23,8 @@ interface Props {
   /** Chamado ao fim da fila com pelo menos um sucesso: o shell recarrega tudo. */
   onConcluido(n: number): void;
   onMsg(text: string, kind?: MsgKind): void;
+  /** Limitação registrada a partir de um resultado ([l]). */
+  onEscrito?(msg: string): void;
 }
 
 type Estado = 'fila' | 'enviando' | 'ok' | 'erro';
@@ -43,7 +47,8 @@ const relogio = (ms: number) => {
   return `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 };
 
-export const Ingest = forwardRef<IngestHandle, Props>(function Ingest({ caso, modo, onConcluido, onMsg }, ref) {
+export const Ingest = forwardRef<IngestHandle, Props>(function Ingest({ caso, modo, onConcluido, onMsg, onEscrito }, ref) {
+  const [limArq, setLimArq] = useState<string | null>(null);
   const guiado = modo === 'guiado';
   const [itens, setItens] = useState<Item[]>([]);
   const [arrastando, setArrastando] = useState<number | null>(null);
@@ -240,7 +245,12 @@ export const Ingest = forwardRef<IngestHandle, Props>(function Ingest({ caso, mo
                     <td className="num-data">{i.res.eventos}</td>
                     <td>
                       {!i.res.detectado ? (
-                        <span className="amber">⊘ fonte não reconhecida: registrado na custódia, sem parser</span>
+                        <span className="amber">
+                          ⊘ fonte não reconhecida: registrado na custódia, sem parser · lacuna →{' '}
+                          <button type="button" className="btn-stamp" onClick={() => setLimArq(i.file.name)}>
+                            [l] registrar LIM
+                          </button>
+                        </span>
                       ) : i.res.ignorados ? (
                         <span className="amber">{i.res.ignorados} linha(s) ignorada(s)</span>
                       ) : (
@@ -260,6 +270,20 @@ export const Ingest = forwardRef<IngestHandle, Props>(function Ingest({ caso, mo
             ))}
           </tbody>
         </table>
+      )}
+      {limArq && (
+        <LimForm
+          caso={caso}
+          modo={modo}
+          prefill={prefillSemParser(limArq)}
+          onMsg={onMsg}
+          onFechar={() => setLimArq(null)}
+          onSalvo={(m) => {
+            setLimArq(null);
+            if (onEscrito) onEscrito(m);
+            else onMsg(m, 'ok');
+          }}
+        />
       )}
     </section>
   );

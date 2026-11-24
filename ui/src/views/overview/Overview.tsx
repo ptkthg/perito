@@ -12,6 +12,7 @@ import { type Confirmadas, sugerida } from '../../lib/bancada';
 import { useConfirmadas } from '../../lib/conf';
 import type { Modo } from '../../lib/mode';
 import { MapCompact } from './MapCompact';
+import { ACOES_UI } from '../../lib/agentes';
 
 interface Props {
   caso: string;
@@ -23,6 +24,8 @@ interface Props {
   rev: number;
   modo: Modo;
   onAbrirMapa(passo: number | null): void;
+  /** Atalho para o painel AGENTES com a ação escolhida. */
+  onAgente(acao: string): void;
   /** Zona INGERIR (montada pelo shell, que também trata [i]). */
   ingest: React.ReactNode;
 }
@@ -136,7 +139,7 @@ function Section({ title, children, id }: { title: string; children: React.React
   );
 }
 
-export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertura, rev, modo, onAbrirMapa, ingest }: Props) {
+export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertura, rev, modo, onAbrirMapa, onAgente, ingest }: Props) {
   const doc = useLoad(() => api.doc(caso, 'caso'), [caso, rev]);
   const hip = useLoad<Hipotese[]>(() => api.hipoteses(caso), [caso, rev]);
   const iocs = useLoad<IocsResp>(() => api.iocs(caso), [caso, rev]);
@@ -192,6 +195,16 @@ export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertu
           {ingest}
         </Section>
       )}
+      <Section title="AGENTES" id="ov-agentes">
+        <p className="ov-ag">
+          <span className="t2">{modo === 'guiado' ? 'peça a um agente (Claude ou Codex) para trabalhar numa cópia do caso:' : 'ga'}</span>{' '}
+          {ACOES_UI.map((a) => (
+            <button key={a.acao} type="button" className="btn-stamp" onClick={() => onAgente(a.acao)}>
+              [{a.tecla}] {a.rotulo.toLowerCase()}
+            </button>
+          ))}
+        </p>
+      </Section>
       <Section title="MAPA DO ATAQUE" id="ov-mapa">
         <MapCompact caso={caso} rev={rev} modo={modo} onAbrir={onAbrirMapa} />
       </Section>

@@ -20,7 +20,8 @@ export type Command =
   | { kind: 'limpar' }
   | { kind: 'desfazer' }
   | { kind: 'ajuda' }
-  | { kind: 'mapa' };
+  | { kind: 'mapa' }
+  | { kind: 'agentes' };
 
 export const COMMANDS: { name: string; args: string; help: string }[] = [
   { name: 'filtro', args: 'campo=v [campo!=v …]', help: 'adiciona filtros (host user ip fonte tipo texto hash dominio tatica)' },
@@ -31,6 +32,7 @@ export const COMMANDS: { name: string; args: string; help: string }[] = [
   { name: 'u', args: '', help: 'desfaz o último filtro' },
   { name: 'ajuda', args: '', help: 'mapa de teclas e glifos' },
   { name: 'mapa', args: '', help: 'abre o MAPA DO ATAQUE (gm)' },
+  { name: 'agentes', args: '', help: 'painel de agentes Claude/Codex (ga)' },
 ];
 
 const PIVOT_FLAGS: Record<string, FilterField> = {
@@ -178,6 +180,8 @@ export function parseCommand(input: string, ctx: ParseCtx): Command {
       return { kind: 'ajuda' };
     case 'mapa':
       return { kind: 'mapa' };
+    case 'agentes':
+      return { kind: 'agentes' };
     default:
       throw new Error(`comando desconhecido: ${cmd} (digite ajuda)`);
   }
@@ -206,6 +210,9 @@ const FIELD_TO_ENTITY: Partial<Record<FilterField, EntityKind>> = {
 };
 
 function valuePool(field: FilterField, ctx: SuggestCtx): { v: string; n: number }[] {
+  if (field === 'tecnica') {
+    return (ctx.resumo?.tecnicas ?? []).map((t) => ({ v: t.id, n: t.eventos }));
+  }
   if (field === 'tatica') {
     const byTac = new Map<string, number>();
     for (const t of ctx.resumo?.tecnicas ?? []) byTac.set(t.tatica, (byTac.get(t.tatica) ?? 0) + t.eventos);

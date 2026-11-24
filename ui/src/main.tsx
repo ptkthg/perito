@@ -4,6 +4,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/app.css';
 import './styles/bench.css';
+import './styles/agents.css';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

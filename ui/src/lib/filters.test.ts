@@ -80,6 +80,17 @@ describe('FilterState', () => {
     expect(describeFilter(f)).toBe('tatica=SAÍDA DE DADOS');
     expect(() => addClause(EMPTY_FILTER, { field: 'tatica', neg: false, value: 'xyz' })).toThrow(/tática desconhecida/);
   });
+  it('tecnica é local, aceita técnica-mãe e exclusão', () => {
+    const tacticOf = makeTacticOf([]);
+    const evs = [ev({ idx: 20, mitre: ['T1059.001'] }), ev({ idx: 21, mitre: ['T1003.001'] }), ev({ idx: 22 })];
+    const f = addClause(EMPTY_FILTER, { field: 'tecnica', neg: false, value: 't1059' });
+    expect(f.clauses[0]!.value).toBe('T1059');
+    expect(toQuery(f)).toEqual({});
+    expect(applyLocal(evs, f, tacticOf).map((e) => e.idx)).toEqual([20]);
+    const n = addClause(EMPTY_FILTER, { field: 'tecnica', neg: true, value: 'T1003.001' });
+    expect(applyLocal(evs, n, tacticOf).map((e) => e.idx)).toEqual([20, 22]);
+    expect(() => addClause(EMPTY_FILTER, { field: 'tecnica', neg: false, value: 'xyz' })).toThrow(/técnica inválida/);
+  });
   it('applyLocal filtra por tática (inclui e exclui)', () => {
     const tacticOf = makeTacticOf([
       { id: 'T1567.002', nome: '', tatica: 'Exfiltração', eventos: 1 },

@@ -15,15 +15,15 @@ import { resolveSource, resolveType, isoMs, tsMs } from './format';
 import { type TacticOf, resolveTatica, rotuloTatica } from './attack-pt';
 
 // `tatica` é filtro LOCAL (aplicado no cliente sobre os eventos carregados; o backend não o conhece).
-export type FilterField = 'host' | 'user' | 'ip' | 'fonte' | 'tipo' | 'texto' | 'hash' | 'dominio' | 'tatica';
+export type FilterField = 'host' | 'user' | 'ip' | 'fonte' | 'tipo' | 'texto' | 'hash' | 'dominio' | 'tatica' | 'tecnica';
 
-export const FILTER_FIELDS: FilterField[] = ['host', 'user', 'ip', 'fonte', 'tipo', 'texto', 'hash', 'dominio', 'tatica'];
+export const FILTER_FIELDS: FilterField[] = ['host', 'user', 'ip', 'fonte', 'tipo', 'texto', 'hash', 'dominio', 'tatica', 'tecnica'];
 
 /** Campos que aceitam exclusão (`campo!=v`, tecla F) no backend. */
 export const EXCLUDABLE: ReadonlySet<FilterField> = new Set<FilterField>(['host', 'user', 'ip', 'fonte', 'tipo']);
 
 /** Campos que aceitam vários valores positivos (OR). Os demais: o novo substitui o anterior. */
-const MULTI: ReadonlySet<FilterField> = new Set<FilterField>(['fonte', 'tipo', 'tatica']);
+const MULTI: ReadonlySet<FilterField> = new Set<FilterField>(['fonte', 'tipo', 'tatica', 'tecnica']);
 
 export const FIELD_ALIASES: Record<string, FilterField> = {
   src: 'fonte',
@@ -34,6 +34,9 @@ export const FIELD_ALIASES: Record<string, FilterField> = {
   sha256: 'hash',
   text: 'texto',
   tática: 'tatica',
+  técnica: 'tecnica',
+  technique: 'tecnica',
+  attack: 'tecnica',
   tactic: 'tatica',
   fase: 'tatica',
 };
@@ -66,6 +69,11 @@ export function isEmptyFilter(f: FilterState): boolean {
 export function canonicalValue(field: FilterField, value: string): string {
   if (field === 'fonte') return resolveSource(value);
   if (field === 'tipo') return resolveType(value);
+  if (field === 'tecnica') {
+    const t = value.trim().toUpperCase();
+    if (!/^T\d{4}(\.\d{3})?$/.test(t)) throw new Error(`técnica inválida: ${value} (ex.: T1059.001)`);
+    return t;
+  }
   if (field === 'tatica') {
     const t = resolveTatica(value);
     if (!t) throw new Error(`tática desconhecida: ${value} (ex.: ENTRADA, EXECUÇÃO, SAÍDA DE DADOS)`);
@@ -81,7 +89,7 @@ const sameClause = (a: Clause, b: Clause) =>
 export function addClause(f: FilterState, c: Clause): FilterState {
   const clause: Clause = { ...c, value: canonicalValue(c.field, c.value) };
   if (!clause.value) throw new Error(`valor vazio para ${clause.field}`);
-  if (clause.neg && !EXCLUDABLE.has(clause.field) && clause.field !== 'tatica') {
+  if (clause.neg && !EXCLUDABLE.has(clause.field) && clause.field !== 'tatica' && clause.field !== 'tecnica') {
     throw new Error(`exclusão não suportada para ${clause.field} (só host, user, ip, fonte, tipo, tatica)`);
   }
   let clauses = f.clauses.filter(
@@ -125,7 +133,7 @@ export function toQuery(f: FilterState, opts: { semJanela?: boolean } = {}): Eve
   }
   const excl: Partial<Record<ExcludableField, string[]>> = {};
   for (const c of f.clauses) {
-    if (!c.neg || c.field === 'tatica') continue;
+    if (!c.neg || c.field === 'tatica' || c.field === 'tecnica') continue;
     const k = c.field as ExcludableField;
     (excl[k] ??= []).push(c.value);
   }
@@ -253,18 +261,24 @@ export function describeFilter(f: FilterState): string {
 
 // ---------- filtros locais (cliente) ----------
 export function hasLocalClauses(f: FilterState): boolean {
-  return f.clauses.some((c) => c.field === 'tatica');
+  return f.clauses.some((c) => c.field === 'tatica' || c.field === 'tecnica');
 }
 
 /** Aplica as cláusulas locais (tatica) sobre os eventos já filtrados pelo backend. */
 export function applyLocal(events: PeritoEvent[], f: FilterState, tacticOf: TacticOf): PeritoEvent[] {
   const pos = f.clauses.filter((c) => c.field === 'tatica' && !c.neg).map((c) => c.value);
   const neg = f.clauses.filter((c) => c.field === 'tatica' && c.neg).map((c) => c.value);
-  if (!pos.length && !neg.length) return events;
+  const tPos = f.clauses.filter((c) => c.field === 'tecnica' && !c.neg).map((c) => c.value);
+  const tNeg = f.clauses.filter((c) => c.field === 'tecnica' && c.neg).map((c) => c.value);
+  if (!pos.length && !neg.length && !tPos.length && !tNeg.length) return events;
+  // T1059 casa T1059 e as subtécnicas T1059.xxx
+  const casa = (tec: string, v: string) => tec === v || tec.startsWith(`${v}.`);
   return events.filter((ev) => {
     const tacs = ev.mitre.map(tacticOf);
     if (pos.length && !tacs.some((t) => t && pos.includes(t))) return false;
     if (neg.length && tacs.some((t) => t && neg.includes(t))) return false;
+    if (tPos.length && !ev.mitre.some((t) => tPos.some((v) => casa(t, v)))) return false;
+    if (tNeg.length && ev.mitre.some((t) => tNeg.some((v) => casa(t, v)))) return false;
     return true;
   });
 }
