@@ -203,9 +203,19 @@ def is_private_ip(ip: str | None) -> bool:
     import ipaddress
 
     try:
-        return ipaddress.ip_address(ip).is_private
+        addr = ipaddress.ip_address(ip)
     except ValueError:
         return False
+    # O stdlib marca as redes de documentação (RFC 5737/3849) como "private"; para investigação
+    # elas representam destinos externos (são usadas nas amostras sintéticas).
+    if any(addr in net for net in _DOC_NETS):
+        return False
+    return addr.is_private
+
+
+import ipaddress as _ipaddress  # noqa: E402
+
+_DOC_NETS = tuple(_ipaddress.ip_network(n) for n in ("192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24", "2001:db8::/32"))
 
 
 def to_int(value: Any) -> int | None:

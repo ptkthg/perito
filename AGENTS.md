@@ -68,7 +68,9 @@ uv run perito resumo <ID>          # cobertura por fonte, janela temporal, hosts
 uv run pytest
 ```
 
-Consultas prontas por fase e dialeto ficam em `queries/{kql,spl,esql}/`. Templates de relatório ficam em `templates/`.
+Se o `pytest` falhar com `PermissionError` em `pytest-of-*` ou `.pytest_cache` (pastas criadas pelo sandbox de outro agente com outra ACL), rode `uv run pytest -p no:cacheprovider --basetemp=<pasta temporária própria>`.
+
+Consultas prontas por fase e dialeto ficam em `queries/{kql,spl}/`. Templates de relatório ficam em `templates/`.
 
 ## 5. Skills
 
