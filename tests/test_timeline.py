@@ -69,7 +69,7 @@ def test_dedupe_and_outputs(rows, tmp_path):
     assert len(files) == 3 and all(p.is_file() for p in files.values())
     with (case.timeline_dir / 'timeline.csv').open(encoding='utf-8', newline='') as fh:
         reader = csv.DictReader(fh)
-        assert reader.fieldnames == 'ts_utc,source,event_type,host,user,src_ip,dst_ip,dst_port,domain,process,parent,cmdline,file_path,sha256,action,outcome,severity,mitre,description,raw_ref,src_host,dst_host,corroborado_por'.split(',')
+        assert reader.fieldnames == 'ts_utc,source,event_type,host,user,src_ip,dst_ip,dst_port,domain,process,parent,cmdline,file_path,sha256,action,outcome,severity,mitre,description,raw_ref,ts_original,src_host,dst_host,corroborado_por'.split(',')
         assert len(list(reader)) == 50
     assert len([json.loads(line) for line in (case.timeline_dir / 'timeline.jsonl').read_text(encoding='utf-8').splitlines()]) == 50
     assert '⧉' in timeline.render_md(rows) and '⚠ volume' in timeline.render_md(rows)

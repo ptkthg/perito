@@ -9,13 +9,17 @@ O revisor **não altera** arquivos do caso: só escreve em `casos/<ID>/revisoes/
 
 ## A) Claude conduz, Codex revisa
 1. Garanta que o caso está salvo (achados, hipóteses, escopo, limitações e timeline gerados).
-2. Rode (na raiz do repositório, com timeout longo):
+2. Gere o insumo de cobertura para o revisor, que não roda a CLI no modo somente leitura:
+   ```
+   uv run perito resumo <ID> > casos/<ID>/revisoes/resumo-cobertura.md
+   ```
+3. Rode (na raiz do repositório, com timeout longo):
    ```
    codex exec -C "<raiz>\casos\<ID>" -s read-only --skip-git-repo-check -o "<raiz>\casos\<ID>\revisoes\codex-<AAAAMMDD-HHMM>.md" "<PROMPT_REVISOR>"
    ```
    Como `-o` grava a última mensagem do Codex, o arquivo fica completo mesmo em modo `read-only`.
-3. Leia a revisão e escreva `revisoes/conciliacao.md` (formato abaixo).
-4. Aplique nos arquivos do caso só o que foi **aceito**, citando a revisão.
+4. Leia a revisão e escreva `revisoes/conciliacao.md` (formato abaixo).
+5. Aplique nos arquivos do caso só o que foi **aceito**, citando a revisão.
 
 ## B) Codex conduz, Claude revisa
 Se o usuário investigou com o Codex, faça a revisão você mesmo, com o mesmo `PROMPT_REVISOR`, sem editar nada fora de `revisoes/`. Grave em `revisoes/claude-<AAAAMMDD-HHMM>.md`.
@@ -23,7 +27,8 @@ Se o usuário investigou com o Codex, faça a revisão você mesmo, com o mesmo 
 ## PROMPT_REVISOR
 ```
 Você é um revisor sênior de DFIR fazendo peer review cético de uma investigação. O diretório atual é um caso do Perito.
-Leia: caso.md, triagem.md, achados.md, hipoteses.md, escopo.md, limitacoes.md, acoes.md, iocs.csv, timeline/timeline.csv e relatorios/ (se existirem). NÃO leia arquivos chamados GABARITO.
+Leia: caso.md, triagem.md, achados.md, hipoteses.md, escopo.md, limitacoes.md, acoes.md, iocs.csv, timeline/timeline.csv, revisoes/resumo-cobertura.md e relatorios/ (se existirem). NÃO leia arquivos chamados GABARITO.
+Confronte obrigatoriamente o resumo-cobertura.md (janelas por fonte, hosts sem EDR) com limitacoes.md e escopo.md: toda lacuna de cobertura que afete uma conclusão precisa estar declarada.
 NÃO altere nenhum arquivo. Sua resposta final é a revisão completa, em português do Brasil, em Markdown, com estas seções:
 1. Veredito geral (a investigação sustenta as conclusões? sim / parcialmente / não) em 3 linhas.
 2. Afirmações sem evidência suficiente: cite o trecho, o arquivo e o que faltaria (raw_ref, consulta).

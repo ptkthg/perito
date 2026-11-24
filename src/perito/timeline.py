@@ -16,7 +16,7 @@ from .mitre import annotate
 from .schema import Event, is_private_ip, normalize_host, normalize_user, parse_ts
 
 DOMINIOS_IGNORADOS = ('office.com', 'microsoft.com', 'windows.net', 'live.com')
-CSV_HEADER = 'ts_utc,source,event_type,host,user,src_ip,dst_ip,dst_port,domain,process,parent,cmdline,file_path,sha256,action,outcome,severity,mitre,description,raw_ref,src_host,dst_host,corroborado_por'.split(',')
+CSV_HEADER = 'ts_utc,source,event_type,host,user,src_ip,dst_ip,dst_port,domain,process,parent,cmdline,file_path,sha256,action,outcome,severity,mitre,description,raw_ref,ts_original,src_host,dst_host,corroborado_por'.split(',')
 
 
 def load_events(case: Case) -> list[Event]:
