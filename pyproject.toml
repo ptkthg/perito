@@ -1,0 +1,23 @@
+[project]
+name = "perito"
+version = "0.1.0"
+description = "Kit de apoio a Resposta a Incidentes / DFIR: normalização, timeline e correlação de evidências (Defender, Sentinel, Entra, Splunk, Elastic, Wazuh)."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+perito = "perito.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/perito"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

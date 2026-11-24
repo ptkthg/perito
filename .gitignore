@@ -1,0 +1,10 @@
+# Casos reais nunca vão para o git
+casos/*
+!casos/.gitkeep
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+*.egg-info/

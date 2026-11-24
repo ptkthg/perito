@@ -1,0 +1,184 @@
+[
+  {
+    "id": "ee94d27a-0db8-401a-8327-27f2fcc5f390",
+    "createdDateTime": "2026-11-10T11:31:02Z",
+    "userDisplayName": "M Silva",
+    "userPrincipalName": "m.silva@acme.com.br",
+    "appDisplayName": "Office 365 Exchange Online",
+    "ipAddress": "192.0.2.10",
+    "clientAppUsed": "Browser",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edg/131.0",
+    "status": {
+      "errorCode": 0,
+      "failureReason": ""
+    },
+    "location": {
+      "city": "São Paulo",
+      "countryOrRegion": "BR"
+    },
+    "riskLevelDuringSignIn": "none",
+    "conditionalAccessStatus": "success",
+    "authenticationRequirement": "multiFactorAuthentication",
+    "deviceDetail": {
+      "displayName": "WS-FIN-023",
+      "operatingSystem": "Windows10",
+      "isCompliant": true
+    }
+  },
+  {
+    "id": "85b2b68f-9892-401a-8327-969f96c8f8a6",
+    "createdDateTime": "2026-11-10T12:10:00Z",
+    "userDisplayName": "J Souza",
+    "userPrincipalName": "j.souza@acme.com.br",
+    "appDisplayName": "Microsoft Teams",
+    "ipAddress": "192.0.2.10",
+    "clientAppUsed": "Browser",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edg/131.0",
+    "status": {
+      "errorCode": 0,
+      "failureReason": ""
+    },
+    "location": {
+      "city": "São Paulo",
+      "countryOrRegion": "BR"
+    },
+    "riskLevelDuringSignIn": "none",
+    "conditionalAccessStatus": "success",
+    "authenticationRequirement": "multiFactorAuthentication",
+    "deviceDetail": {
+      "displayName": "WS-FIN-041",
+      "operatingSystem": "Windows10",
+      "isCompliant": true
+    }
+  },
+  {
+    "id": "cfe0f82b-c3e2-4e24-8b35-ddf35dce9af9",
+    "createdDateTime": "2026-11-10T13:22:10Z",
+    "userDisplayName": "M Silva",
+    "userPrincipalName": "m.silva@acme.com.br",
+    "appDisplayName": "OfficeHome",
+    "ipAddress": "198.51.100.77",
+    "clientAppUsed": "Browser",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "status": {
+      "errorCode": 500121,
+      "failureReason": "Authentication failed during strong authentication request. The user denied the MFA push."
+    },
+    "location": {
+      "city": "Amsterdam",
+      "countryOrRegion": "NL"
+    },
+    "riskLevelDuringSignIn": "medium",
+    "conditionalAccessStatus": "failure",
+    "authenticationRequirement": "multiFactorAuthentication",
+    "deviceDetail": {
+      "displayName": "",
+      "operatingSystem": "Windows10",
+      "isCompliant": false
+    }
+  },
+  {
+    "id": "2e781817-c3e2-4e24-8194-12f4aad7ec09",
+    "createdDateTime": "2026-11-10T13:23:05Z",
+    "userDisplayName": "M Silva",
+    "userPrincipalName": "m.silva@acme.com.br",
+    "appDisplayName": "OfficeHome",
+    "ipAddress": "198.51.100.77",
+    "clientAppUsed": "Browser",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "status": {
+      "errorCode": 500121,
+      "failureReason": "Authentication failed during strong authentication request. The user denied the MFA push."
+    },
+    "location": {
+      "city": "Amsterdam",
+      "countryOrRegion": "NL"
+    },
+    "riskLevelDuringSignIn": "medium",
+    "conditionalAccessStatus": "failure",
+    "authenticationRequirement": "multiFactorAuthentication",
+    "deviceDetail": {
+      "displayName": "",
+      "operatingSystem": "Windows10",
+      "isCompliant": false
+    }
+  },
+  {
+    "id": "23a54a54-c3e2-4e24-88ba-cc3c564f0217",
+    "createdDateTime": "2026-11-10T13:24:51Z",
+    "userDisplayName": "M Silva",
+    "userPrincipalName": "m.silva@acme.com.br",
+    "appDisplayName": "OfficeHome",
+    "ipAddress": "198.51.100.77",
+    "clientAppUsed": "Browser",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "status": {
+      "errorCode": 500121,
+      "failureReason": "Authentication failed during strong authentication request. The user denied the MFA push."
+    },
+    "location": {
+      "city": "Amsterdam",
+      "countryOrRegion": "NL"
+    },
+    "riskLevelDuringSignIn": "medium",
+    "conditionalAccessStatus": "failure",
+    "authenticationRequirement": "multiFactorAuthentication",
+    "deviceDetail": {
+      "displayName": "",
+      "operatingSystem": "Windows10",
+      "isCompliant": false
+    }
+  },
+  {
+    "id": "e278d1f7-c3e2-4e24-811d-c68371607907",
+    "createdDateTime": "2026-11-10T13:25:03Z",
+    "userDisplayName": "M Silva",
+    "userPrincipalName": "m.silva@acme.com.br",
+    "appDisplayName": "OfficeHome",
+    "ipAddress": "198.51.100.77",
+    "clientAppUsed": "Browser",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "status": {
+      "errorCode": 0,
+      "failureReason": ""
+    },
+    "location": {
+      "city": "Amsterdam",
+      "countryOrRegion": "NL"
+    },
+    "riskLevelDuringSignIn": "medium",
+    "conditionalAccessStatus": "success",
+    "authenticationRequirement": "multiFactorAuthentication",
+    "deviceDetail": {
+      "displayName": "",
+      "operatingSystem": "Windows10",
+      "isCompliant": false
+    }
+  },
+  {
+    "id": "2bf02add-0db8-4e24-816e-8a6fd4f4a4fb",
+    "createdDateTime": "2026-11-10T13:28:00Z",
+    "userDisplayName": "M Silva",
+    "userPrincipalName": "m.silva@acme.com.br",
+    "appDisplayName": "Office 365 Exchange Online",
+    "ipAddress": "198.51.100.77",
+    "clientAppUsed": "Browser",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "status": {
+      "errorCode": 0,
+      "failureReason": ""
+    },
+    "location": {
+      "city": "Amsterdam",
+      "countryOrRegion": "NL"
+    },
+    "riskLevelDuringSignIn": "medium",
+    "conditionalAccessStatus": "success",
+    "authenticationRequirement": "multiFactorAuthentication",
+    "deviceDetail": {
+      "displayName": "",
+      "operatingSystem": "Windows10",
+      "isCompliant": false
+    }
+  }
+]

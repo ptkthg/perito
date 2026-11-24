@@ -1,0 +1,78 @@
+[
+  {
+    "id": "Directory_026f560eb5fd90fe",
+    "activityDateTime": "2026-11-10T10:00:00Z",
+    "activityDisplayName": "Update user",
+    "category": "UserManagement",
+    "result": "success",
+    "loggedByService": "Core Directory",
+    "initiatedBy": {
+      "user": {
+        "userPrincipalName": "admin.ti@acme.com.br",
+        "ipAddress": "192.0.2.10"
+      }
+    },
+    "targetResources": [
+      {
+        "type": "User",
+        "userPrincipalName": "j.souza@acme.com.br",
+        "displayName": "J Souza"
+      }
+    ],
+    "additionalDetails": []
+  },
+  {
+    "id": "AuthMethods_b61cbf2bdae7897a",
+    "activityDateTime": "2026-11-10T13:26:12Z",
+    "activityDisplayName": "User registered security info",
+    "category": "UserManagement",
+    "result": "success",
+    "loggedByService": "Authentication Methods",
+    "initiatedBy": {
+      "user": {
+        "userPrincipalName": "m.silva@acme.com.br",
+        "ipAddress": "198.51.100.77"
+      }
+    },
+    "targetResources": [
+      {
+        "type": "User",
+        "userPrincipalName": "m.silva@acme.com.br",
+        "displayName": "M Silva"
+      }
+    ],
+    "additionalDetails": [
+      {
+        "key": "Method",
+        "value": "Microsoft Authenticator App"
+      }
+    ]
+  },
+  {
+    "id": "Directory_c06d8cfccd2e2521",
+    "activityDateTime": "2026-11-10T13:30:44Z",
+    "activityDisplayName": "Consent to application",
+    "category": "ApplicationManagement",
+    "result": "success",
+    "loggedByService": "Core Directory",
+    "initiatedBy": {
+      "user": {
+        "userPrincipalName": "m.silva@acme.com.br",
+        "ipAddress": "198.51.100.77"
+      }
+    },
+    "targetResources": [
+      {
+        "type": "ServicePrincipal",
+        "displayName": "MailSync Pro",
+        "id": "6f1c0000-0000-4000-8000-00000000beef"
+      }
+    ],
+    "additionalDetails": [
+      {
+        "key": "Permissions",
+        "value": "Mail.Read Mail.Send offline_access"
+      }
+    ]
+  }
+]
