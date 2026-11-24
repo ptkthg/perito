@@ -1,0 +1,55 @@
+// Perito · 01 · Acesso inicial (T1566 Phishing, T1190 Exploit Public-Facing App, T1133 External Remote Services, T1078 Valid Accounts)
+// Placeholders: {{upn}} {{host}} {{inicio}} {{fim}}
+
+// [Q1.1] E-mails entregues ao usuário com anexo ou URL na janela (Defender for Office 365)
+// Interpretar: remetente externo + anexo com macro/ISO/LNK/HTML + entrega = candidato a vetor. Verifique ThreatTypes e DetectionMethods.
+EmailEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where RecipientEmailAddress =~ "{{upn}}"
+| where AttachmentCount > 0 or UrlCount > 0
+| join kind=leftouter (EmailAttachmentInfo | project NetworkMessageId, FileName, FileType, SHA256) on NetworkMessageId
+| project TableName = "EmailEvents", Timestamp, SenderFromAddress, SenderIPv4, RecipientEmailAddress, Subject, DeliveryAction,
+          DeliveryLocation, ThreatTypes, DetectionMethods, FileName, FileType, SHA256, NetworkMessageId
+| order by Timestamp asc
+
+// [Q1.2] O mesmo e-mail chegou a outras pessoas? (escopo da campanha)
+EmailEvents
+| where Timestamp between (datetime({{inicio}}) - 2d .. datetime({{fim}}))
+| where SenderFromAddress =~ "<remetente de Q1.1>" or Subject == "<assunto de Q1.1>"
+| summarize Destinatarios = make_set(RecipientEmailAddress, 200), Entregues = countif(DeliveryAction == "Delivered"), Total = count() by SenderFromAddress, Subject
+
+// [Q1.3] Cliques em URLs de e-mail (Safe Links)
+UrlClickEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where AccountUpn =~ "{{upn}}"
+| project Timestamp, AccountUpn, Url, ActionType, IsClickedThrough, NetworkMessageId, IPAddress
+
+// [Q1.4] Anexo aberto no endpoint: arquivo criado pelo Outlook/navegador
+// Interpretar: liga o e-mail (Q1.1) ao endpoint. O SHA256 deve bater com o de EmailAttachmentInfo.
+DeviceFileEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where DeviceName startswith "{{host}}"
+| where InitiatingProcessFileName in~ ("outlook.exe", "olk.exe", "msedge.exe", "chrome.exe", "firefox.exe")
+| where FileName matches regex @"(?i)\.(xlsm|xlsb|docm|doc|xls|iso|img|lnk|zip|rar|7z|html?|one|js|vbs|hta|msi)$"
+| project TableName = "DeviceFileEvents", Timestamp, DeviceName, ActionType, FileName, FolderPath, SHA256, InitiatingProcessFileName, InitiatingProcessAccountName
+
+// [Q1.5] Processo filho suspeito de aplicação Office ou de leitor (T1204.002)
+DeviceProcessEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where InitiatingProcessFileName in~ ("winword.exe","excel.exe","powerpnt.exe","outlook.exe","onenote.exe","msaccess.exe","acrord32.exe")
+| where FileName in~ ("powershell.exe","pwsh.exe","cmd.exe","wscript.exe","cscript.exe","mshta.exe","rundll32.exe","regsvr32.exe","certutil.exe","bitsadmin.exe")
+| project TableName = "DeviceProcessEvents", Timestamp, DeviceName, ActionType, AccountName, InitiatingProcessFileName, FileName, ProcessCommandLine, SHA256
+
+// [Q1.6] Exposição externa: logons RDP/SMB vindos de IP público (T1133 / T1078)
+DeviceLogonEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where isnotempty(RemoteIP) and RemoteIPType == "Public"
+| project TableName = "DeviceLogonEvents", Timestamp, DeviceName, ActionType, LogonType, AccountDomain, AccountName, RemoteIP
+| order by Timestamp asc
+
+// [Q1.7] Processo filho de serviço web ou de app exposto (T1190, webshell)
+DeviceProcessEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where InitiatingProcessFileName in~ ("w3wp.exe","httpd.exe","nginx.exe","tomcat9.exe","java.exe","php-cgi.exe","sqlservr.exe")
+| where FileName in~ ("cmd.exe","powershell.exe","pwsh.exe","whoami.exe","net.exe","certutil.exe","rundll32.exe")
+| project TableName = "DeviceProcessEvents", Timestamp, DeviceName, ActionType, AccountName, InitiatingProcessFileName, InitiatingProcessCommandLine, FileName, ProcessCommandLine

@@ -1,0 +1,46 @@
+// Perito · 03 · Persistência (T1053.005 Scheduled Task, T1543.003 Windows Service, T1547.001 Run Keys, T1136 Create Account, T1098 Account Manipulation)
+// Placeholders: {{host}} {{inicio}} {{fim}}
+
+// [Q3.1] Tarefas agendadas criadas ou alteradas
+DeviceEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where ActionType in ("ScheduledTaskCreated","ScheduledTaskUpdated")
+| project TableName = "DeviceEvents", Timestamp, DeviceName, ActionType, AccountName, InitiatingProcessFileName, InitiatingProcessCommandLine, AdditionalFields
+
+// [Q3.2] schtasks / Register-ScheduledTask pela linha de comando
+DeviceProcessEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where (FileName =~ "schtasks.exe" and ProcessCommandLine has "/create") or ProcessCommandLine has_any ("Register-ScheduledTask","New-ScheduledTaskAction")
+| project TableName = "DeviceProcessEvents", Timestamp, DeviceName, ActionType, AccountName, InitiatingProcessFileName, FileName, ProcessCommandLine
+
+// [Q3.3] Serviços instalados
+union withsource=TableName
+  (DeviceEvents | where ActionType == "ServiceInstalled"),
+  (DeviceProcessEvents | where (FileName =~ "sc.exe" and ProcessCommandLine has_any ("create","config")) or ProcessCommandLine has "New-Service")
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| project TableName, Timestamp, DeviceName, ActionType, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName, AdditionalFields
+
+// [Q3.4] Chaves Run/RunOnce, Winlogon, IFEO, serviços
+DeviceRegistryEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where RegistryKey has_any (@"\CurrentVersion\Run", @"\CurrentVersion\RunOnce", @"\Winlogon", @"\Image File Execution Options", @"\CurrentControlSet\Services")
+| where ActionType in ("RegistryValueSet","RegistryKeyCreated")
+| project TableName = "DeviceRegistryEvents", Timestamp, DeviceName, ActionType, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessFileName, InitiatingProcessAccountName
+
+// [Q3.5] Arquivos na pasta Startup
+DeviceFileEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where FolderPath has @"\Start Menu\Programs\Startup\"
+| project TableName = "DeviceFileEvents", Timestamp, DeviceName, ActionType, FileName, FolderPath, SHA256, InitiatingProcessFileName, InitiatingProcessAccountName
+
+// [Q3.6] Contas criadas ou adicionadas a grupos privilegiados (Sentinel / SecurityEvent)
+SecurityEvent
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where EventID in (4720, 4722, 4724, 4728, 4732, 4738, 4756)
+| project TimeGenerated, Type, Computer, EventID, Activity, Account, SubjectUserName, TargetUserName, MemberName, TargetDomainName
+
+// [Q3.7] Persistência via WMI (eventos de assinatura permanente)
+DeviceEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where ActionType == "WmiBindEventFilterToConsumer"
+| project TableName = "DeviceEvents", Timestamp, DeviceName, ActionType, AccountName, InitiatingProcessFileName, AdditionalFields

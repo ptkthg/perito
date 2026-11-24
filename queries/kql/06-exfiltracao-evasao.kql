@@ -1,0 +1,51 @@
+// Perito · 06 · Coleta, exfiltração e evasão (T1560 Archive, T1567.002 Exfil to Cloud Storage, T1048, T1041, T1039, T1070.001 Clear Logs, T1562.001, T1490)
+// Placeholders: {{host}} {{ip}} {{inicio}} {{fim}}
+
+// [Q6.1] Ferramentas de sincronização/transferência para a nuvem
+DeviceProcessEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where FileName in~ ("rclone.exe","megacmd.exe","megasync.exe","restic.exe","winscp.exe","filezilla.exe","pscp.exe")
+     or (ProcessCommandLine has_any ("copy","sync","--transfers") and ProcessCommandLine has_any ("remote:","s3:","mega:","drive:","dropbox:"))
+| project TableName = "DeviceProcessEvents", Timestamp, DeviceName, ActionType, AccountName, InitiatingProcessFileName, FileName, ProcessCommandLine, SHA256
+
+// [Q6.2] Compactação de dados antes da saída (T1560.001)
+DeviceProcessEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where FileName in~ ("7z.exe","7za.exe","rar.exe","winrar.exe","tar.exe") or ProcessCommandLine has "Compress-Archive"
+| project TableName = "DeviceProcessEvents", Timestamp, DeviceName, ActionType, AccountName, FileName, ProcessCommandLine
+
+// [Q6.3] Volume de saída por origem/destino público (firewall no Sentinel via CommonSecurityLog)
+// O Defender não traz bytes: use FW/proxy para quantificar.
+CommonSecurityLog
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where not(ipv4_is_private(DestinationIP))
+| summarize BytesSaida = sum(SentBytes), Sessoes = count(), Primeira = min(TimeGenerated), Ultima = max(TimeGenerated) by SourceIP, DestinationIP, DestinationPort
+| where BytesSaida > 100 * 1024 * 1024
+| order by BytesSaida desc
+
+// [Q6.4] Sessões brutas para o destino de exfiltração (para ingerir no perito)
+CommonSecurityLog
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where DestinationIP == "{{ip}}" or SourceIP == "{{ip}}"
+| project TimeGenerated, Type, DeviceName, SourceIP, DestinationIP, DestinationPort, RequestURL, DeviceAction, SentBytes, ReceivedBytes, ApplicationProtocol
+
+// [Q6.5] Limpeza de logs e desligamento de defesas
+union withsource=TableName
+  (SecurityEvent | where EventID in (1102, 104) | extend Timestamp = TimeGenerated, DeviceName = Computer),
+  (DeviceProcessEvents | where ProcessCommandLine has_any ("wevtutil cl","Clear-EventLog","Set-MpPreference -Disable","Add-MpPreference -ExclusionPath",
+        "vssadmin delete shadows","wmic shadowcopy delete","bcdedit /set"))
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| project TableName, Timestamp, DeviceName, EventID, Activity, AccountName, Account, ProcessCommandLine
+
+// [Q6.6] Acesso em massa a arquivos em compartilhamento (T1039), quando houver auditoria 5145
+SecurityEvent
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where EventID == 5145
+| summarize Arquivos = dcount(RelativeTargetName), Exemplos = make_set(RelativeTargetName, 20) by Computer, SubjectUserName, IpAddress, ShareName, bin(TimeGenerated, 10m)
+| where Arquivos > 200
+
+// [Q6.7] Uploads para serviços de nuvem pessoal pelo endpoint (Defender, sem bytes)
+DeviceNetworkEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where RemoteUrl has_any ("mega.nz","mega.co.nz","dropbox","drive.google","onedrive.live","wetransfer","anonfiles","transfer.sh","file.io","pcloud")
+| project TableName = "DeviceNetworkEvents", Timestamp, DeviceName, ActionType, InitiatingProcessFileName, InitiatingProcessAccountName, RemoteIP, RemotePort, RemoteUrl, LocalIP

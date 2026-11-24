@@ -1,0 +1,51 @@
+// Perito · 05 · Movimentação lateral (T1021.001 RDP, T1021.002 SMB/Admin Shares, T1021.006 WinRM, T1569.002 PsExec, T1047 WMI, T1550 Pass-the-Hash/Ticket)
+// Placeholders: {{host}} {{user}} {{ip}} {{inicio}} {{fim}}
+
+// [Q5.1] Logons de rede/RDP vindos do host comprometido (origem = {{ip}})
+DeviceLogonEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where RemoteIP == "{{ip}}" and LogonType in ("RemoteInteractive","Network")
+| project TableName = "DeviceLogonEvents", Timestamp, DeviceName, ActionType, LogonType, AccountDomain, AccountName, RemoteIP, RemoteDeviceName
+| order by Timestamp asc
+
+// [Q5.2] Mesmo pivô no SecurityEvent (servidores sem MDE): 4624 tipo 3/10, 4625, 4648
+SecurityEvent
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where EventID in (4624, 4625, 4648) and (IpAddress == "{{ip}}" or TargetUserName =~ "{{user}}")
+| project TimeGenerated, Type, Computer, EventID, Activity, Account, TargetUserName, LogonType, IpAddress, WorkstationName,
+          AuthenticationPackageName, LogonProcessName
+
+// [Q5.3] Conexões saindo do host comprometido para portas de administração
+DeviceNetworkEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where DeviceName startswith "{{host}}"
+| where RemotePort in (3389, 445, 135, 5985, 5986, 22) and ActionType == "ConnectionSuccess"
+| project TableName = "DeviceNetworkEvents", Timestamp, DeviceName, ActionType, InitiatingProcessFileName, InitiatingProcessCommandLine,
+          InitiatingProcessAccountName, RemoteIP, RemotePort, LocalIP
+
+// [Q5.4] Execução remota: PsExec, WMI, WinRM
+DeviceProcessEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where FileName in~ ("psexesvc.exe","wsmprovhost.exe") or InitiatingProcessFileName in~ ("wmiprvse.exe","wsmprovhost.exe","psexesvc.exe")
+     or ProcessCommandLine has_any ("psexec",@"\admin$","Invoke-Command","Enter-PSSession","winrs","wmic /node")
+| project TableName = "DeviceProcessEvents", Timestamp, DeviceName, ActionType, AccountName, InitiatingProcessFileName, FileName, ProcessCommandLine
+
+// [Q5.5] Pass-the-Hash: logon tipo 9 (seclogo) ou NTLM de rede com conta de usuário
+SecurityEvent
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where EventID == 4624
+| where (LogonType == 9 and LogonProcessName has "seclogo") or (LogonType == 3 and AuthenticationPackageName == "NTLM" and TargetUserName !endswith "$")
+| project TimeGenerated, Type, Computer, EventID, TargetUserName, LogonType, LogonProcessName, AuthenticationPackageName, IpAddress, WorkstationName
+
+// [Q5.6] Para onde a conta foi: todos os hosts com logon de {{user}} na janela
+DeviceLogonEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where AccountName =~ "{{user}}" and ActionType == "LogonSuccess"
+| summarize Primeira = min(Timestamp), Ultima = max(Timestamp), Tipos = make_set(LogonType), Origens = make_set(RemoteIP, 20) by DeviceName
+| order by Primeira asc
+
+// [Q5.7] Conta de serviço com logon interativo/RDP (uso anômalo)
+SecurityEvent
+| where TimeGenerated between (datetime({{inicio}}) - 30d .. datetime({{fim}}))
+| where EventID == 4624 and LogonType in (2, 10) and TargetUserName startswith "svc"
+| summarize Logons = count(), Primeira = min(TimeGenerated), Ultima = max(TimeGenerated), Origens = make_set(IpAddress, 20) by TargetUserName, Computer

@@ -1,0 +1,42 @@
+`comment("Perito · 06 · Coleta, exfiltração e evasão (T1560, T1567.002, T1048, T1039, T1070.001, T1562.001, T1490). Placeholders: {{host}} {{ip}} {{inicio}} {{fim}}")`
+
+`comment("[Q6.1] Ferramentas de sincronização/transferência para a nuvem")`
+((index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1) OR (index=windows EventCode=4688)) earliest="{{inicio}}" latest="{{fim}}"
+  (Image="*\\rclone.exe" OR NewProcessName="*\\rclone.exe" OR Image="*\\megacmd*.exe" OR Image="*\\restic.exe" OR Image="*\\winscp.exe" OR Image="*\\pscp.exe" OR CommandLine="*rclone*" OR CommandLine="*--transfers*" OR CommandLine="*mega:*" OR CommandLine="*remote:*")
+| table _time host source sourcetype EventCode Image NewProcessName ParentImage CommandLine User SubjectUserName Hashes
+
+`comment("[Q6.2] Compactação antes da saída (T1560.001)")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 earliest="{{inicio}}" latest="{{fim}}"
+  (Image="*\\7z.exe" OR Image="*\\7za.exe" OR Image="*\\rar.exe" OR Image="*\\winrar.exe" OR Image="*\\tar.exe" OR CommandLine="*Compress-Archive*")
+| table _time host source sourcetype EventCode Image CommandLine User
+
+`comment("[Q6.3] Volume de saída por origem e destino público (firewall). Base para quantificar a exfiltração")`
+index=network sourcetype="pan:traffic" earliest="{{inicio}}" latest="{{fim}}"
+| where NOT cidrmatch("10.0.0.0/8", dest_ip) AND NOT cidrmatch("172.16.0.0/12", dest_ip) AND NOT cidrmatch("192.168.0.0/16", dest_ip)
+| stats sum(bytes_out) as bytes_out count as sessoes min(_time) as primeira max(_time) as ultima by src_ip dest_ip dest_port app
+| where bytes_out > 104857600
+| eval gb_out=round(bytes_out/1024/1024/1024, 2)
+| convert ctime(primeira) ctime(ultima)
+| sort - bytes_out
+
+`comment("[Q6.4] Sessões brutas para o destino de exfiltração (para ingerir no perito)")`
+index=network earliest="{{inicio}}" latest="{{fim}}" (dest_ip="{{ip}}" OR src_ip="{{ip}}")
+| table _time host source sourcetype src_ip dest_ip dest_port app action bytes_out bytes_in user url
+| sort 0 _time
+
+`comment("[Q6.5] Limpeza de log e desativação de defesas")`
+((index=windows (EventCode=1102 OR EventCode=104))
+ OR (index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 (CommandLine="*wevtutil* cl *" OR CommandLine="*Clear-EventLog*" OR CommandLine="*Set-MpPreference*-Disable*" OR CommandLine="*Add-MpPreference*-ExclusionPath*" OR CommandLine="*vssadmin*delete*shadows*" OR CommandLine="*shadowcopy*delete*" OR CommandLine="*bcdedit*/set*")))
+ earliest="{{inicio}}" latest="{{fim}}"
+| table _time host source sourcetype EventCode SubjectUserName Image CommandLine User
+
+`comment("[Q6.6] Acesso em massa a arquivos em compartilhamento (5145, exige auditoria de File Share detalhada)")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=5145 earliest="{{inicio}}" latest="{{fim}}"
+| bin _time span=10m
+| stats dc(RelativeTargetName) as arquivos values(ShareName) as shares by _time host SubjectUserName IpAddress
+| where arquivos > 200
+
+`comment("[Q6.7] DNS para serviços de armazenamento/transferência")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=22 earliest="{{inicio}}" latest="{{fim}}"
+  (QueryName="*mega.nz" OR QueryName="*mega.co.nz" OR QueryName="*dropbox*" OR QueryName="*wetransfer*" OR QueryName="*transfer.sh" OR QueryName="*file.io" OR QueryName="*pcloud*" OR QueryName="*anonfiles*")
+| table _time host source sourcetype EventCode Image QueryName QueryResults User

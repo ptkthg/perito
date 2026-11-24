@@ -1,0 +1,36 @@
+// Perito · 00 · Linha do tempo bruta de um host ou conta (Defender XDR Advanced Hunting)
+// Use primeiro: dá a visão completa da janela e alimenta o perito (exporte em CSV).
+// Placeholders: {{host}} {{user}} {{inicio}} {{fim}}
+
+// [Q0.1] Tudo do host na janela (processos, rede, arquivos, registro, logons, eventos)
+let inicio = datetime({{inicio}});
+let fim = datetime({{fim}});
+let alvo = "{{host}}";
+union withsource=TableName DeviceProcessEvents, DeviceNetworkEvents, DeviceFileEvents,
+      DeviceRegistryEvents, DeviceLogonEvents, DeviceEvents
+| where Timestamp between (inicio .. fim)
+| where DeviceName startswith alvo
+| project TableName, Timestamp, DeviceName, ActionType, AccountDomain, AccountName, FileName, FolderPath, SHA256,
+          ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine, InitiatingProcessAccountName,
+          RemoteIP, RemotePort, RemoteUrl, LocalIP, LogonType, RegistryKey, RegistryValueName, RegistryValueData, AdditionalFields
+| order by Timestamp asc
+
+// [Q0.2] Tudo de uma conta em todos os hosts (atenção: volume alto, então restrinja a janela)
+let inicio = datetime({{inicio}});
+let fim = datetime({{fim}});
+let conta = "{{user}}";
+union withsource=TableName DeviceProcessEvents, DeviceNetworkEvents, DeviceFileEvents, DeviceLogonEvents, DeviceEvents
+| where Timestamp between (inicio .. fim)
+| where AccountName =~ conta or InitiatingProcessAccountName =~ conta
+| project TableName, Timestamp, DeviceName, ActionType, AccountName, FileName, FolderPath, SHA256, ProcessCommandLine,
+          InitiatingProcessFileName, InitiatingProcessCommandLine, InitiatingProcessAccountName, RemoteIP, RemotePort, RemoteUrl, LocalIP, LogonType
+| order by Timestamp asc
+
+// [Q0.3] Servidor sem MDE: eventos de segurança do Windows via Sentinel (AMA)
+SecurityEvent
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where Computer startswith "{{host}}"
+| where EventID in (4624, 4625, 4634, 4648, 4672, 4688, 4697, 4698, 4702, 4720, 4722, 4724, 4728, 4732, 4738, 4756, 5140, 5145, 7045, 1102)
+| project TimeGenerated, Type, Computer, EventID, Activity, Account, SubjectUserName, TargetUserName, LogonType, IpAddress,
+          WorkstationName, NewProcessName, ParentProcessName, CommandLine, ServiceName, TaskName, PrivilegeList
+| order by TimeGenerated asc

@@ -1,0 +1,49 @@
+// Perito · 07 · Identidade / Entra ID (T1078.004 Cloud Accounts, T1621 MFA Request Generation, T1098.005 Device Registration, T1528 Steal App Access Token, T1564.008 Email Hiding Rules)
+// Tabelas Sentinel: SigninLogs, AADNonInteractiveUserSignInLogs, AuditLogs, OfficeActivity.
+// Placeholders: {{upn}} {{ip}} {{inicio}} {{fim}}
+
+// [Q7.1] Todos os sign-ins da conta (interativos e não interativos)
+union SigninLogs, AADNonInteractiveUserSignInLogs
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where UserPrincipalName =~ "{{upn}}"
+| project Type, TimeGenerated, UserPrincipalName, AppDisplayName, IPAddress, ResultType, ResultDescription, LocationDetails,
+          RiskLevelDuringSignIn, ConditionalAccessStatus, AuthenticationRequirement, UserAgent, DeviceDetail, CorrelationId
+| order by TimeGenerated asc
+
+// [Q7.2] MFA fatigue: pushes negados (500121) seguidos de sucesso no mesmo IP
+SigninLogs
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| summarize Negados = countif(ResultType == "500121"), Sucessos = countif(ResultType == "0"), Primeira = min(TimeGenerated), Ultima = max(TimeGenerated) by UserPrincipalName, IPAddress
+| where Negados >= 2 and Sucessos >= 1
+
+// [Q7.3] Tudo o que veio do IP suspeito (outras contas atingidas?)
+union SigninLogs, AADNonInteractiveUserSignInLogs
+| where TimeGenerated between (datetime({{inicio}}) - 7d .. datetime({{fim}}))
+| where IPAddress == "{{ip}}"
+| summarize Tentativas = count(), Sucessos = countif(ResultType == "0"), Apps = make_set(AppDisplayName) by UserPrincipalName
+
+// [Q7.4] Métodos de autenticação, consentimentos OAuth, papéis e credenciais de app
+AuditLogs
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where OperationName in~ ("User registered security info","Admin registered security info","User deleted security info","Consent to application",
+        "Add app role assignment to service principal","Add delegated permission grant","Add member to role","Add eligible member to role",
+        "Add service principal credentials","Update application – Certificates and secrets management","Add owner to application","Reset password (by admin)")
+| project Type, TimeGenerated, OperationName, Result, InitiatedBy, TargetResources, AdditionalDetails, CorrelationId
+
+// [Q7.5] Regras de caixa de correio e encaminhamento (Exchange Online)
+OfficeActivity
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where Operation in~ ("New-InboxRule","Set-InboxRule","Set-Mailbox","UpdateInboxRules","Add-MailboxPermission") and UserId =~ "{{upn}}"
+| project TimeGenerated, Operation, UserId, ClientIP, Parameters, ResultStatus
+
+// [Q7.6] E-mails acessados pelo atacante (MailItemsAccessed exige auditoria Premium)
+OfficeActivity
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where Operation == "MailItemsAccessed" and (ClientIP has "{{ip}}" or UserId =~ "{{upn}}")
+| summarize Eventos = count() by UserId, ClientIP, bin(TimeGenerated, 1h)
+
+// [Q7.7] Uso do app OAuth consentido (Graph activity / CloudAppEvents no Defender XDR)
+CloudAppEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where AccountObjectId != "" and (Application has "<nome do app>" or tostring(RawEventData.AppId) == "<appId>")
+| project Timestamp, Application, ActionType, AccountDisplayName, IPAddress, CountryCode, RawEventData

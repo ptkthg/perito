@@ -1,0 +1,29 @@
+`comment("Perito · 07 · Identidade / Entra ID no Splunk (Splunk Add-on for Microsoft Cloud Services: sourcetype azure:monitor:aad).")`
+`comment("IMPORTANTE: para INGERIR no perito, prefira baixar os logs direto do Entra (portal > Sign-in logs / Audit logs > Download JSON) ou via Graph. O parser entra_signin/entra_audit lê esse formato. Use estas buscas para hunting e escopo no Splunk.")`
+`comment("Placeholders: {{upn}} {{ip}} {{inicio}} {{fim}}")`
+
+`comment("[Q7.1] Sign-ins da conta")`
+index=azure sourcetype="azure:monitor:aad" category=SignInLogs earliest="{{inicio}}" latest="{{fim}}" "properties.userPrincipalName"="{{upn}}"
+| table _time properties.userPrincipalName properties.appDisplayName properties.ipAddress properties.status.errorCode properties.status.failureReason
+        properties.location.city properties.location.countryOrRegion properties.riskLevelDuringSignIn properties.conditionalAccessStatus properties.userAgent
+| sort 0 _time
+
+`comment("[Q7.2] MFA fatigue: 500121 seguidos de sucesso no mesmo IP")`
+index=azure sourcetype="azure:monitor:aad" category=SignInLogs earliest="{{inicio}}" latest="{{fim}}"
+| eval codigo='properties.status.errorCode', upn='properties.userPrincipalName', ip='properties.ipAddress'
+| stats count(eval(codigo=500121)) as negados count(eval(codigo=0)) as sucessos min(_time) as primeira max(_time) as ultima by upn ip
+| where negados>=2 AND sucessos>=1
+| convert ctime(primeira) ctime(ultima)
+
+`comment("[Q7.3] Outras contas vindas do IP suspeito")`
+index=azure sourcetype="azure:monitor:aad" category=SignInLogs earliest=-7d "properties.ipAddress"="{{ip}}"
+| stats count as tentativas count(eval('properties.status.errorCode'=0)) as sucessos values(properties.appDisplayName) as apps by properties.userPrincipalName
+
+`comment("[Q7.4] Métodos MFA, consentimentos OAuth, papéis, credenciais de app")`
+index=azure sourcetype="azure:monitor:aad" category=AuditLogs earliest="{{inicio}}" latest="{{fim}}"
+  ("properties.activityDisplayName"="User registered security info" OR "properties.activityDisplayName"="Admin registered security info" OR "properties.activityDisplayName"="Consent to application" OR "properties.activityDisplayName"="Add delegated permission grant" OR "properties.activityDisplayName"="Add member to role" OR "properties.activityDisplayName"="Add service principal credentials" OR "properties.activityDisplayName"="Add owner to application")
+| table _time properties.activityDisplayName properties.result properties.initiatedBy.user.userPrincipalName properties.initiatedBy.user.ipAddress properties.targetResources{}.displayName properties.targetResources{}.userPrincipalName
+
+`comment("[Q7.5] Regras de inbox (Exchange Online via Splunk Add-on for Microsoft Office 365: sourcetype o365:management:activity)")`
+index=o365 sourcetype="o365:management:activity" earliest="{{inicio}}" latest="{{fim}}" (Operation="New-InboxRule" OR Operation="Set-InboxRule" OR Operation="UpdateInboxRules" OR Operation="Set-Mailbox") UserId="{{upn}}"
+| table _time Operation UserId ClientIP Parameters{}.Name Parameters{}.Value ResultStatus

@@ -1,0 +1,30 @@
+`comment("Perito · 03 · Persistência (T1053.005, T1543.003, T1547.001, T1136, T1098). Placeholders: {{host}} {{inicio}} {{fim}}")`
+
+`comment("[Q3.1] Tarefas agendadas: 4698/4702 e schtasks /create")`
+((index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") (EventCode=4698 OR EventCode=4702))
+ OR (index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 Image="*\\schtasks.exe" CommandLine="*/create*"))
+ earliest="{{inicio}}" latest="{{fim}}"
+| table _time host source sourcetype EventCode SubjectUserName TaskName TaskContent Image CommandLine User
+
+`comment("[Q3.2] Serviços instalados: 7045 (System) / 4697 (Security) / sc create")`
+((index=windows (EventCode=7045 OR EventCode=4697))
+ OR (index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 Image="*\\sc.exe" (CommandLine="*create*" OR CommandLine="*config*")))
+ earliest="{{inicio}}" latest="{{fim}}"
+| table _time host source sourcetype EventCode ServiceName ImagePath ServiceFileName SubjectUserName Image CommandLine User
+
+`comment("[Q3.3] Run/RunOnce, Winlogon, IFEO (Sysmon 12/13/14)")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" (EventCode=12 OR EventCode=13 OR EventCode=14) earliest="{{inicio}}" latest="{{fim}}"
+  (TargetObject="*\\CurrentVersion\\Run*" OR TargetObject="*\\Winlogon\\*" OR TargetObject="*\\Image File Execution Options\\*")
+| table _time host source sourcetype EventCode Image TargetObject Details User
+
+`comment("[Q3.4] Arquivos na pasta Startup (Sysmon 11)")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=11 TargetFilename="*\\Start Menu\\Programs\\Startup\\*" earliest="{{inicio}}" latest="{{fim}}"
+| table _time host source sourcetype EventCode Image TargetFilename User
+
+`comment("[Q3.5] Contas criadas e adicionadas a grupos privilegiados")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") (EventCode=4720 OR EventCode=4722 OR EventCode=4724 OR EventCode=4728 OR EventCode=4732 OR EventCode=4738 OR EventCode=4756) earliest="{{inicio}}" latest="{{fim}}"
+| table _time host source sourcetype EventCode SubjectUserName TargetUserName MemberName TargetDomainName
+
+`comment("[Q3.6] Persistência WMI (Sysmon 19/20/21)")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" (EventCode=19 OR EventCode=20 OR EventCode=21) earliest="{{inicio}}" latest="{{fim}}"
+| table _time host source sourcetype EventCode User Name Query Destination Consumer Filter

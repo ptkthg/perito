@@ -1,0 +1,35 @@
+`comment("Perito · 04 · Acesso a credenciais (T1003.001/002/003, T1558.003, T1110). Placeholders: {{host}} {{inicio}} {{fim}}")`
+
+`comment("[Q4.1] Acesso ao LSASS (Sysmon 10) com GrantedAccess típico de dump")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=10 TargetImage="*\\lsass.exe" earliest="{{inicio}}" latest="{{fim}}"
+  NOT (SourceImage="*\\MsMpEng.exe" OR SourceImage="*\\csrss.exe" OR SourceImage="*\\wininit.exe" OR SourceImage="*\\svchost.exe")
+| table _time host source sourcetype EventCode SourceImage TargetImage GrantedAccess CallTrace SourceUser
+
+`comment("[Q4.2] Dumps por linha de comando (comsvcs MiniDump, procdump, mimikatz)")`
+((index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1) OR (index=windows EventCode=4688)) earliest="{{inicio}}" latest="{{fim}}"
+  ((CommandLine="*comsvcs*" CommandLine="*minidump*") OR (CommandLine="*procdump*" CommandLine="*lsass*") OR CommandLine="*sekurlsa*" OR CommandLine="*mimikatz*" OR CommandLine="*nanodump*")
+| table _time host source sourcetype EventCode Image NewProcessName ParentImage CommandLine User SubjectUserName
+
+`comment("[Q4.3] SAM/SECURITY/NTDS")`
+((index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1) OR (index=windows EventCode=4688)) earliest="{{inicio}}" latest="{{fim}}"
+  ((CommandLine="*reg*" CommandLine="*save*" (CommandLine="*hklm\\sam*" OR CommandLine="*hklm\\security*" OR CommandLine="*hklm\\system*")) OR CommandLine="*ntdsutil*" OR CommandLine="*ntds.dit*" OR CommandLine="*vssadmin*create*shadow*")
+| table _time host source sourcetype EventCode Image CommandLine User SubjectUserName
+
+`comment("[Q4.4] Contas com sessão interativa no host comprometido nos 7 dias anteriores (expostas ao dump)")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=4624 (LogonType=2 OR LogonType=10 OR LogonType=11 OR LogonType=7) host="{{host}}*" earliest=-7d@d latest="{{fim}}"
+| stats min(_time) as primeira max(_time) as ultima count as logons values(IpAddress) as origens by TargetUserName LogonType
+| convert ctime(primeira) ctime(ultima)
+| sort - ultima
+
+`comment("[Q4.5] Kerberoasting: 4769 com RC4 (0x17) em volume")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=4769 TicketEncryptionType=0x17 earliest="{{inicio}}" latest="{{fim}}"
+| where NOT like(ServiceName, "%$")
+| bin _time span=10m
+| stats count as tickets values(ServiceName) as servicos by _time TargetUserName IpAddress
+| where tickets > 5
+
+`comment("[Q4.6] Força bruta / password spray")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=4625 earliest="{{inicio}}" latest="{{fim}}"
+| bin _time span=15m
+| stats count as falhas dc(TargetUserName) as contas values(TargetUserName) as lista by _time IpAddress host
+| where falhas > 10

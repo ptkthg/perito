@@ -1,0 +1,29 @@
+`comment("Perito · 01 · Acesso inicial (T1566, T1190, T1133, T1078). Placeholders: {{host}} {{user}} {{inicio}} {{fim}}")`
+
+`comment("[Q1.1] Processo filho suspeito de Office/leitor (T1204.002), via Sysmon EventCode 1")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 earliest="{{inicio}}" latest="{{fim}}"
+  (ParentImage="*\\winword.exe" OR ParentImage="*\\excel.exe" OR ParentImage="*\\powerpnt.exe" OR ParentImage="*\\outlook.exe" OR ParentImage="*\\onenote.exe" OR ParentImage="*\\acrord32.exe")
+  (Image="*\\powershell.exe" OR Image="*\\pwsh.exe" OR Image="*\\cmd.exe" OR Image="*\\wscript.exe" OR Image="*\\cscript.exe" OR Image="*\\mshta.exe" OR Image="*\\rundll32.exe" OR Image="*\\regsvr32.exe" OR Image="*\\certutil.exe")
+| table _time host source sourcetype EventCode ParentImage Image CommandLine User Hashes
+
+`comment("[Q1.2] Anexos de risco gravados pelo cliente de e-mail ou navegador (Sysmon 11)")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=11 host="{{host}}*" earliest="{{inicio}}" latest="{{fim}}"
+  (Image="*\\outlook.exe" OR Image="*\\msedge.exe" OR Image="*\\chrome.exe" OR Image="*\\firefox.exe")
+| regex TargetFilename="(?i)\.(xlsm|xlsb|docm|doc|xls|iso|img|lnk|zip|rar|7z|html?|one|js|vbs|hta|msi)$"
+| table _time host source sourcetype EventCode Image TargetFilename User
+
+`comment("[Q1.3] Logons RDP/rede vindos de IP público (T1133/T1078)")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=4624 (LogonType=10 OR LogonType=3) earliest="{{inicio}}" latest="{{fim}}"
+| where NOT cidrmatch("10.0.0.0/8", IpAddress) AND NOT cidrmatch("172.16.0.0/12", IpAddress) AND NOT cidrmatch("192.168.0.0/16", IpAddress) AND IpAddress!="-" AND IpAddress!="127.0.0.1" AND IpAddress!="::1"
+| table _time host source sourcetype EventCode TargetUserName LogonType IpAddress WorkstationName
+
+`comment("[Q1.4] Processo filho de serviço web (webshell, T1190)")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 earliest="{{inicio}}" latest="{{fim}}"
+  (ParentImage="*\\w3wp.exe" OR ParentImage="*\\httpd.exe" OR ParentImage="*\\nginx.exe" OR ParentImage="*\\tomcat*.exe" OR ParentImage="*\\java.exe" OR ParentImage="*\\sqlservr.exe")
+  (Image="*\\cmd.exe" OR Image="*\\powershell.exe" OR Image="*\\whoami.exe" OR Image="*\\net.exe" OR Image="*\\certutil.exe")
+| table _time host source sourcetype EventCode ParentImage Image CommandLine User
+
+`comment("[Q1.5] Acessos de VPN de fora do país ou fora do horário (ajuste ao sourcetype da sua VPN, ex.: cisco:asa, pan:globalprotect)")`
+index=network (sourcetype="pan:globalprotect" OR sourcetype="cisco:asa") earliest="{{inicio}}" latest="{{fim}}" user="*{{user}}*"
+| iplocation src_ip
+| table _time host source sourcetype user src_ip Country City action

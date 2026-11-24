@@ -1,0 +1,37 @@
+`comment("Perito · 02 · Execução (T1059, T1204, T1218, T1105, T1071). Placeholders: {{host}} {{sha256}} {{ip}} {{inicio}} {{fim}}")`
+
+`comment("[Q2.1] PowerShell ofuscado, oculto ou com download")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 earliest="{{inicio}}" latest="{{fim}}"
+  (Image="*\\powershell.exe" OR Image="*\\pwsh.exe")
+  (CommandLine="*-enc*" OR CommandLine="*-EncodedCommand*" OR CommandLine="*FromBase64String*" OR CommandLine="*DownloadString*" OR CommandLine="*DownloadFile*" OR CommandLine="*IEX*" OR CommandLine="*Invoke-Expression*" OR CommandLine="*hidden*" OR CommandLine="*bypass*" OR CommandLine="*Invoke-WebRequest*" OR CommandLine="*iwr *" OR CommandLine="*Net.WebClient*")
+| table _time host source sourcetype EventCode ParentImage Image CommandLine User Hashes
+
+`comment("[Q2.2] Mesmo critério no 4688 (servidores sem Sysmon; exige auditoria de linha de comando habilitada)")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=4688 earliest="{{inicio}}" latest="{{fim}}"
+  (NewProcessName="*\\powershell.exe" OR NewProcessName="*\\pwsh.exe" OR NewProcessName="*\\mshta.exe" OR NewProcessName="*\\rundll32.exe" OR NewProcessName="*\\regsvr32.exe" OR NewProcessName="*\\certutil.exe")
+| table _time host source sourcetype EventCode SubjectUserName ParentProcessName NewProcessName CommandLine
+
+`comment("[Q2.3] LOLBins com uso típico de ataque")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 earliest="{{inicio}}" latest="{{fim}}"
+  ((Image="*\\rundll32.exe" (CommandLine="*comsvcs*" OR CommandLine="*javascript:*" OR CommandLine="*\\AppData\\*" OR CommandLine="*\\ProgramData\\*"))
+   OR (Image="*\\regsvr32.exe" (CommandLine="*/i:http*" OR CommandLine="*scrobj.dll*"))
+   OR Image="*\\mshta.exe"
+   OR (Image="*\\certutil.exe" (CommandLine="*urlcache*" OR CommandLine="*-decode*"))
+   OR (Image="*\\bitsadmin.exe" CommandLine="*/transfer*"))
+| table _time host source sourcetype EventCode ParentImage Image CommandLine User Hashes
+
+`comment("[Q2.4] Prevalência de um hash (Sysmon Hashes contém SHA256=...)")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 Hashes="*{{sha256}}*" earliest=-30d
+| stats dc(host) as hosts values(host) as lista_hosts min(_time) as primeira max(_time) as ultima values(Image) as imagens
+| convert ctime(primeira) ctime(ultima)
+
+`comment("[Q2.5] Conexões de interpretadores/LOLBins para a internet (Sysmon 3, C2)")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=3 earliest="{{inicio}}" latest="{{fim}}"
+  (Image="*\\powershell.exe" OR Image="*\\pwsh.exe" OR Image="*\\rundll32.exe" OR Image="*\\regsvr32.exe" OR Image="*\\mshta.exe" OR Image="*\\wscript.exe" OR Image="*\\cscript.exe" OR Image="*\\certutil.exe")
+| where NOT cidrmatch("10.0.0.0/8", DestinationIp) AND NOT cidrmatch("172.16.0.0/12", DestinationIp) AND NOT cidrmatch("192.168.0.0/16", DestinationIp)
+| table _time host source sourcetype EventCode Image User SourceIp DestinationIp DestinationPort DestinationHostname
+
+`comment("[Q2.6] Quem mais falou com o IP de C2 (firewall)? Escopo")`
+index=network earliest=-7d (dest_ip="{{ip}}" OR src_ip="{{ip}}")
+| stats count as sessoes sum(bytes_out) as bytes_out sum(bytes_in) as bytes_in min(_time) as primeira max(_time) as ultima by src_ip dest_ip dest_port
+| convert ctime(primeira) ctime(ultima)

@@ -1,0 +1,57 @@
+// Perito · 04 · Acesso a credenciais (T1003.001 LSASS, T1003.002 SAM, T1003.003 NTDS, T1558 Kerberos, T1110 Brute Force)
+// Placeholders: {{host}} {{user}} {{inicio}} {{fim}}
+
+// [Q4.1] Acesso ao LSASS (OpenProcess) e dumps conhecidos
+union withsource=TableName
+  (DeviceEvents | where ActionType == "OpenProcessApiCall" and FileName =~ "lsass.exe"),
+  (DeviceProcessEvents | where ProcessCommandLine has_all ("comsvcs","minidump")
+        or (ProcessCommandLine has "lsass" and ProcessCommandLine has_any ("procdump","-ma","dump"))
+        or ProcessCommandLine has_any ("sekurlsa","mimikatz","nanodump"))
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| project TableName, Timestamp, DeviceName, ActionType, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName,
+          InitiatingProcessCommandLine, InitiatingProcessAccountName, AdditionalFields
+
+// [Q4.2] Arquivos de dump gravados (.dmp; .bin/.tmp em Public/Temp/ProgramData)
+DeviceFileEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where FileName endswith ".dmp" or (FolderPath has_any (@"\Users\Public\", @"\Temp\", @"\ProgramData\") and FileName matches regex @"(?i)\.(bin|dmp|tmp)$")
+| project TableName = "DeviceFileEvents", Timestamp, DeviceName, ActionType, FileName, FolderPath, FileSize, SHA256, InitiatingProcessFileName, InitiatingProcessAccountName
+
+// [Q4.3] SAM / SECURITY / NTDS
+DeviceProcessEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where (ProcessCommandLine has "reg" and ProcessCommandLine has "save" and ProcessCommandLine has_any (@"hklm\sam", @"hklm\security", @"hklm\system"))
+     or ProcessCommandLine has_any ("ntdsutil","ntds.dit","vssadmin create shadow","diskshadow")
+| project TableName = "DeviceProcessEvents", Timestamp, DeviceName, ActionType, AccountName, InitiatingProcessFileName, FileName, ProcessCommandLine
+
+// [Q4.4] Contas com sessão no host comprometido ANTES do dump (credenciais expostas)
+// Interpretar: toda conta com logon Interactive/RemoteInteractive/CachedInteractive no host deve ser tratada como potencialmente comprometida após um dump do LSASS.
+DeviceLogonEvents
+| where Timestamp between (datetime({{inicio}}) - 7d .. datetime({{fim}}))
+| where DeviceName startswith "{{host}}"
+| where LogonType in ("Interactive","RemoteInteractive","CachedInteractive","Unlock") and ActionType == "LogonSuccess"
+| summarize Primeira = min(Timestamp), Ultima = max(Timestamp), Logons = count(), Origens = make_set(RemoteIP, 10) by AccountDomain, AccountName, LogonType
+| order by Ultima desc
+
+// [Q4.5] Kerberoasting (4769 com RC4) (Sentinel / SecurityEvent dos DCs)
+SecurityEvent
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where EventID == 4769 and TicketEncryptionType == "0x17" and ServiceName !endswith "$"
+| summarize Tickets = count(), Servicos = make_set(ServiceName, 50) by TargetUserName, IpAddress, bin(TimeGenerated, 10m)
+| where Tickets > 5
+
+// [Q4.6] Força bruta / password spray em logons Windows
+SecurityEvent
+| where TimeGenerated between (datetime({{inicio}}) .. datetime({{fim}}))
+| where EventID == 4625
+| summarize Falhas = count(), Contas = dcount(TargetUserName), ContasLista = make_set(TargetUserName, 25) by IpAddress, Computer, bin(TimeGenerated, 15m)
+| where Falhas > 10
+
+// [Q4.7] Leitura de cofres de credenciais de navegador (infostealer, T1555.003)
+DeviceFileEvents
+| where Timestamp between (datetime({{inicio}}) .. datetime({{fim}}))
+| where DeviceName startswith "{{host}}"
+| where FolderPath has_any (@"\Google\Chrome\User Data\", @"\Microsoft\Edge\User Data\", @"\Mozilla\Firefox\Profiles\")
+| where FileName in~ ("Login Data","Cookies","logins.json","key4.db","Local State")
+| where InitiatingProcessFileName !in~ ("chrome.exe","msedge.exe","firefox.exe")
+| project TableName = "DeviceFileEvents", Timestamp, DeviceName, ActionType, FileName, FolderPath, InitiatingProcessFileName, InitiatingProcessAccountName

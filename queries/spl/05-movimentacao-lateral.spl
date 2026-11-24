@@ -1,0 +1,34 @@
+`comment("Perito · 05 · Movimentação lateral (T1021.001/002/006, T1569.002, T1047, T1550.002). Placeholders: {{host}} {{user}} {{ip}} {{inicio}} {{fim}}")`
+
+`comment("[Q5.1] Logons de rede/RDP vindos do IP do host comprometido")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") (EventCode=4624 OR EventCode=4625 OR EventCode=4648) IpAddress="{{ip}}" earliest="{{inicio}}" latest="{{fim}}"
+| table _time host source sourcetype EventCode TargetUserName LogonType IpAddress WorkstationName AuthenticationPackageName LogonProcessName
+| sort 0 _time
+
+`comment("[Q5.2] Conexões do host comprometido para portas de administração (Sysmon 3 + firewall interno)")`
+((index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=3 host="{{host}}*" (DestinationPort=3389 OR DestinationPort=445 OR DestinationPort=135 OR DestinationPort=5985 OR DestinationPort=5986 OR DestinationPort=22))
+ OR (index=network src_ip="{{ip}}" (dest_port=3389 OR dest_port=445 OR dest_port=135 OR dest_port=5985 OR dest_port=5986 OR dest_port=22)))
+ earliest="{{inicio}}" latest="{{fim}}"
+| table _time host source sourcetype EventCode Image User SourceIp DestinationIp DestinationPort src_ip dest_ip dest_port action
+
+`comment("[Q5.3] Execução remota: PsExec, WMI, WinRM")`
+index=sysmon sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1 earliest="{{inicio}}" latest="{{fim}}"
+  (Image="*\\psexesvc.exe" OR ParentImage="*\\psexesvc.exe" OR ParentImage="*\\wmiprvse.exe" OR ParentImage="*\\wsmprovhost.exe" OR CommandLine="*psexec*" OR CommandLine="*\\admin$*" OR CommandLine="*Invoke-Command*" OR CommandLine="*Enter-PSSession*" OR CommandLine="*winrs*" OR CommandLine="*wmic*/node*")
+| table _time host source sourcetype EventCode ParentImage Image CommandLine User
+
+`comment("[Q5.4] Pass-the-Hash: 4624 tipo 9 seclogo ou NTLM de rede com conta de usuário")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=4624 earliest="{{inicio}}" latest="{{fim}}"
+  ((LogonType=9 LogonProcessName="seclogo*") OR (LogonType=3 AuthenticationPackageName="NTLM"))
+| where NOT like(TargetUserName, "%$")
+| table _time host source sourcetype EventCode TargetUserName LogonType LogonProcessName AuthenticationPackageName IpAddress WorkstationName
+
+`comment("[Q5.5] Para onde a conta foi: hosts com logon de {{user}}")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=4624 TargetUserName="{{user}}" earliest="{{inicio}}" latest="{{fim}}"
+| stats min(_time) as primeira max(_time) as ultima values(LogonType) as tipos values(IpAddress) as origens by host
+| convert ctime(primeira) ctime(ultima)
+| sort primeira
+
+`comment("[Q5.6] Conta de serviço com logon interativo/RDP nos últimos 30 dias (uso anômalo)")`
+index=windows (sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security") EventCode=4624 (LogonType=2 OR LogonType=10) TargetUserName="svc*" earliest=-30d
+| stats count as logons min(_time) as primeira max(_time) as ultima values(IpAddress) as origens by TargetUserName host
+| convert ctime(primeira) ctime(ultima)

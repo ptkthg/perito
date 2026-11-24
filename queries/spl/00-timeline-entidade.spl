@@ -1,0 +1,21 @@
+`comment("Perito · 00 · Linha do tempo bruta de host/conta no Splunk. Ajuste index/sourcetype ao seu ambiente.")`
+`comment("Placeholders: {{host}} {{user}} {{ip}} {{inicio}} {{fim}}. Exporte em CSV mantendo _time, host, source, sourcetype e os campos originais.")`
+
+`comment("[Q0.1] Sysmon + Security de um host")`
+(index=windows OR index=sysmon) host="{{host}}*" earliest="{{inicio}}" latest="{{fim}}"
+  (sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" OR sourcetype="XmlWinEventLog:Security" OR sourcetype="WinEventLog:Security")
+| table _time host source sourcetype EventCode Image ParentImage CommandLine User Hashes TargetFilename TargetObject
+        DestinationIp DestinationPort DestinationHostname QueryName QueryResults SourceImage TargetImage
+        TargetUserName SubjectUserName LogonType IpAddress WorkstationName NewProcessName ParentProcessName ServiceName TaskName
+| sort 0 _time
+
+`comment("[Q0.2] Tudo de uma conta (Windows + firewall/proxy)")`
+(index=windows OR index=sysmon OR index=network) earliest="{{inicio}}" latest="{{fim}}"
+  (User="*{{user}}" OR TargetUserName="{{user}}" OR SubjectUserName="{{user}}" OR user="*{{user}}*")
+| table _time host source sourcetype EventCode Image ParentImage CommandLine User TargetUserName SubjectUserName LogonType IpAddress src_ip dest_ip dest_port url action bytes_out bytes_in
+| sort 0 _time
+
+`comment("[Q0.3] Tráfego de/para um IP no firewall/proxy")`
+index=network earliest="{{inicio}}" latest="{{fim}}" (src_ip="{{ip}}" OR dest_ip="{{ip}}")
+| table _time host source sourcetype src_ip dest_ip dest_port app action bytes_out bytes_in user url
+| sort 0 _time
