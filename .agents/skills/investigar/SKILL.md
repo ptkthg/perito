@@ -33,5 +33,8 @@ Pré-requisito: caso com evidências ingeridas (`ingerir`) e timeline gerada (`t
 - **Fuso:** compare a mesma ação em duas fontes. Diferença de horas cravadas indica erro de fuso, não dois eventos.
 - **Hipóteses concorrentes:** para o vetor de entrada e a origem de credenciais, mantenha pelo menos duas hipóteses até que uma seja refutada.
 
+## Resumo em linguagem simples (obrigatório)
+Ao fim de cada fase, atualize a seção `## Resumo` do `caso.md` (crie logo abaixo da lista de metadados se não existir). São 2 a 4 parágrafos curtos que alguém sem formação técnica entenda: o que aconteceu, onde, o que foi afetado e o que ainda não se sabe. Sem IDs de técnica nem jargão (escreva "copiou as senhas da memória do Windows", não "T1003.001 LSASS dump"). Cada frase termina com a tag `[EVIDÊNCIA]`, `[HIPÓTESE]` ou `[LIMITAÇÃO]`. A interface (Visão Geral) mostra este texto.
+
 ## Saída por fase
 Resumo da fase em 3–6 linhas com tags, hipóteses atualizadas, IOCs novos, limitações e a próxima fase ou consulta. Ao final de todas as fases, sugira `escopo` e depois `relatorio`.

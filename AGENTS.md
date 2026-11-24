@@ -38,7 +38,7 @@ Fases de investigação (skill `investigar`), na ordem: **acesso inicial → exe
 
 ```
 casos/<ID>/
-  caso.md            # metadados, fase NIST, contexto, partes envolvidas
+  caso.md            # metadados, fase NIST, contexto, partes envolvidas e "## Resumo" em linguagem simples (lido pela Visão Geral da interface)
   evidencias/brutas/ # originais (somente leitura)
   custodia.csv       # registro_utc, arquivo, sha256, bytes, fonte, coletado_por, observacao
   normalizado/       # <fonte>__<arquivo>.jsonl (schema Event)
