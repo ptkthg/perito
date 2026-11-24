@@ -3,7 +3,9 @@
 // (carimbo de borda 1px, sem raio). A expansão do conteúdo acontece aqui, nunca na linha.
 import type { PeritoEvent } from '../../lib/types';
 import type { FilterField } from '../../lib/filters';
-import { shortHash, sourceCode, sourceColor, typeCode, isHeuristic } from '../../lib/format';
+import { shortHash, sourceCode, sourceColor, typeCode } from '../../lib/format';
+import { sugerida } from '../../lib/bancada';
+import { useConfirmadas } from '../../lib/conf';
 import { type Modo, sourceLong, typePt } from '../../lib/mode';
 import { type TacticOf, sortTechniques, tecnicaPt } from '../../lib/attack-pt';
 
@@ -21,6 +23,10 @@ interface Props {
   onCopy(label: string, value: string): void;
   onMark(): void;
   onJumpRef(rawRef: string): void;
+  onPromover(): void;
+  onVincular(): void;
+  /** Formulário da bancada aberto (substitui o corpo do detalhe, painel alargado). */
+  bancada: React.ReactNode;
 }
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v ? v : v != null && typeof v !== 'object' ? String(v) : null);
@@ -65,9 +71,10 @@ function Btn({ children, onClick, title }: { children: React.ReactNode; onClick(
 }
 
 export function DetailPanel(props: Props) {
-  const { ev, pos, total, pinned, marked, modo, tacticOf, techNames, onPivot, onFilter, onCopy, onMark, onJumpRef } = props;
+  const { ev, pos, total, pinned, marked, modo, tacticOf, techNames, onPivot, onFilter, onCopy, onMark, onJumpRef, onPromover, onVincular, bancada } = props;
   const guiado = modo === 'guiado';
   const t = L[modo];
+  const conf = useConfirmadas();
   const width = String(total).length;
   if (!ev) {
     return (
@@ -106,7 +113,8 @@ export function DetailPanel(props: Props) {
         {pinned && <span className="lbl amber detail-pin"> FIXO</span>}
         {marked && <span className="amber"> *</span>}
       </div>
-      <div className="detail-body">
+      {bancada ? <div className="detail-body">{bancada}</div> : null}
+      <div className="detail-body" hidden={!!bancada}>
         {guiado && (
           <div className="dv-actions" role="group" aria-label="Ações sobre este evento">
             {hostVal && (
@@ -133,6 +141,12 @@ export function DetailPanel(props: Props) {
               Copiar referência
             </Btn>
             <Btn onClick={onMark}>{marked ? 'Desmarcar' : 'Marcar'}</Btn>
+            <Btn onClick={onPromover} title="tecla a: grava em achados.md com ■EVIDÊNCIA">
+              Promover a achado [a]
+            </Btn>
+            <Btn onClick={onVincular} title="tecla H: liga este evento a uma hipótese">
+              Vincular a hipótese [H]
+            </Btn>
           </div>
         )}
         <dl className="dv">
@@ -274,7 +288,7 @@ export function DetailPanel(props: Props) {
           <div className="dv-block">
             <div className="lbl t2">{t.attack}</div>
             {techs.map((tech) => {
-              const h = isHeuristic(ev, tech);
+              const h = sugerida(ev, tech, conf);
               return (
                 <div key={tech} className="dv-tech" title={techNames.get(tech) ?? undefined}>
                   <span>

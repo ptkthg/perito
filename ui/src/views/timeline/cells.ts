@@ -1,7 +1,8 @@
 // Regras das colunas da timeline: valor exibido, valor copiado (y), pivô (p) e filtro (f/F).
 import type { Histograma, PeritoEvent, Resumo } from '../../lib/types';
 import type { FilterField, FilterState } from '../../lib/filters';
-import { isHeuristic, sourceCode, hhmm, tsMs } from '../../lib/format';
+import { sourceCode, hhmm, tsMs } from '../../lib/format';
+import { type Confirmadas, VAZIO_CONF, sugerida } from '../../lib/bancada';
 import { type TacticOf, primaryTechnique, sortTechniques } from '../../lib/attack-pt';
 
 export type ColKey = 'ts' | 'src' | 'tipo' | 'host' | 'user' | 'resumo' | 'attack' | 'flag';
@@ -32,10 +33,11 @@ export function hostDisplay(ev: PeritoEvent): { text: string; deduced: boolean; 
  * Técnica principal: ordenada pela posição da tática na kill chain (Evasão de defesa por
  * último), depois subtécnica, depois lexical. Ex.: powershell → T1059.001, não T1027.
  */
-export function attackCell(ev: PeritoEvent, tacticOf: TacticOf): { text: string; more: number; heur: boolean } | null {
+export function attackCell(ev: PeritoEvent, tacticOf: TacticOf, conf: Confirmadas = VAZIO_CONF): { text: string; more: number; heur: boolean } | null {
   const main = primaryTechnique(ev, tacticOf);
   if (!main) return null;
-  return { text: main, heur: isHeuristic(ev, main), more: ev.mitre.length - 1 };
+  // "?" só enquanto a técnica for sugestão da heurística não confirmada em achados.md
+  return { text: main, heur: sugerida(ev, main, conf), more: ev.mitre.length - 1 };
 }
 
 /** SINAIS do modo GUIADO em palavras curtas. */

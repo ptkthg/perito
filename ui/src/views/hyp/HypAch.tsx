@@ -4,7 +4,9 @@
 // Refs (arquivo.csv:15-17, entra.json#3, A6) abrem a F1 com os eventos selecionados.
 // Teclas: j/k item · h/l coluna · Enter abre as evidências do item · / filtra.
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { api } from '../../lib/api';
+import { ApiError, ConflitoError, api, describeError } from '../../lib/api';
+import type { MsgAcao } from '../../lib/msg';
+import { ConflictPanel } from '../bench/ConflictPanel';
 import type { Achado, Hipotese } from '../../lib/types';
 import type { Modo } from '../../lib/mode';
 import { type ViewHandle, moveKey } from '../../lib/view';
@@ -21,6 +23,30 @@ interface Props {
   onOpenRefs(texto: string, achados: Achado[], rotulo: string): void;
   onMsg(text: string, kind?: MsgKind): void;
   onPrompt(prefill: string, mode: PromptMode): void;
+  rev: number;
+  /** Escrita concluída (o shell recarrega e mostra a mensagem com as ações). */
+  onEscrito(msg: string, acoes?: MsgAcao[]): void;
+  /** [a] gerar achado a partir de uma hipótese confirmada. */
+  onGerarAchado(h: Hipotese, achados: Achado[]): void;
+}
+
+const STATUS = [
+  { k: '1', v: 'aberta' },
+  { k: '2', v: 'confirmada' },
+  { k: '3', v: 'refutada' },
+  { k: '4', v: 'inconclusiva' },
+] as const;
+const CONFIANCAS = [
+  { k: 'b', v: 'baixa' },
+  { k: 'm', v: 'média' },
+  { k: 'l', v: 'alta' },
+] as const;
+
+interface Edicao {
+  hid: string;
+  status: 'confirmada' | 'refutada';
+  texto: string;
+  erro: string | null;
 }
 
 const CONF: Record<string, string> = { baixa: 'BAI', média: 'MÉD', media: 'MÉD', alta: 'ALT' };
@@ -40,15 +66,21 @@ const CAMPOS: { k: keyof Hipotese; analista: string; guiado: string }[] = [
   { k: 'confirmaria', analista: 'CONFIRMARIA', guiado: 'CONFIRMA SE' },
   { k: 'refutaria', analista: 'REFUTARIA', guiado: 'DERRUBA SE' },
   { k: 'proximo_passo', analista: 'PRÓXIMO PASSO', guiado: 'PRÓXIMO PASSO' },
+  { k: 'contradiz', analista: 'CONTRADIZ', guiado: 'CONTRADIZ' },
+  { k: 'justificativa', analista: 'JUSTIFICATIVA', guiado: 'JUSTIFICATIVA' },
 ];
 
 const hipTexto = (h: Hipotese) => [h.id, h.titulo, h.status, h.fase, h.sustentacao, h.confirmaria, h.refutaria, h.proximo_passo, ...h.refs].join(' ');
 const achTexto = (a: Achado) => [a.id, a.utc, a.host, a.conta, a.achado, ...a.attack, ...a.evidencia].join(' ');
 
-export const HypAch = forwardRef<ViewHandle, Props>(function HypAch({ caso, modo, onOpenRefs, onMsg, onPrompt }, ref) {
+export const HypAch = forwardRef<ViewHandle, Props>(function HypAch({ caso, modo, onOpenRefs, onMsg, onPrompt, rev, onEscrito, onGerarAchado }, ref) {
   const guiado = modo === 'guiado';
-  const hip = useLoad(() => api.hipoteses(caso), [caso]);
-  const ach = useLoad(() => api.achados(caso), [caso]);
+  const hip = useLoad(() => api.hipoteses(caso), [caso, rev]);
+  const ach = useLoad(() => api.achados(caso), [caso, rev]);
+  const [edicao, setEdicao] = useState<Edicao | null>(null);
+  const [erroCard, setErroCard] = useState<{ hid: string; msg: string } | null>(null);
+  const [conflito, setConflito] = useState<{ hid: string; base: string | null; atual: string; refazer: () => void } | null>(null);
+  const justRef = useRef<HTMLTextAreaElement>(null);
   const achados = useMemo(() => (ach?.ok ? ach.v : []), [ach]);
   const [busca, setBusca] = useState('');
   const [col, setCol] = useState(0);
@@ -80,8 +112,89 @@ export const HypAch = forwardRef<ViewHandle, Props>(function HypAch({ caso, modo
       });
   };
 
+  /** PATCH na hipótese, com conflito 409 inline e erro do backend no próprio card. */
+  const patch = async (h: Hipotese, body: Parameters<typeof api.patchHipotese>[2], ok: (h: Hipotese) => void) => {
+    setErroCard(null);
+    let base: string | null = null;
+    try {
+      base = (await api.doc(caso, 'hipoteses')).conteudo; // versão atual + base do diff
+    } catch {
+      /* segue com a versão conhecida */
+    }
+    const tentar = async (): Promise<void> => {
+      try {
+        await api.patchHipotese(caso, h.id, body);
+        setConflito(null);
+        setEdicao(null);
+        ok(h);
+      } catch (x) {
+        if (x instanceof ConflitoError) {
+          setConflito({
+            hid: h.id,
+            base,
+            atual: x.conflito.conteudoAtual,
+            refazer: () => {
+              void api.doc(caso, 'hipoteses').then((d) => {
+                base = d.conteudo;
+                void tentar();
+              });
+            },
+          });
+        } else {
+          const m = x instanceof ApiError ? `${x.message}${x.detalhe ? ` — ${x.detalhe}` : ''}` : describeError(x);
+          if (edicao && edicao.hid === h.id) setEdicao({ ...edicao, erro: m });
+          else setErroCard({ hid: h.id, msg: m });
+          onMsg(`✕ ${h.id} não alterada: ${m}`, 'err');
+        }
+      }
+    };
+    await tentar();
+  };
+
+  const mudarStatus = (h: Hipotese, v: string) => {
+    if (v === 'confirmada' || v === 'refutada') {
+      setEdicao({ hid: h.id, status: v, texto: '', erro: null });
+      requestAnimationFrame(() => justRef.current?.focus());
+      return;
+    }
+    void patch(h, { status: v }, () => onEscrito(`✓ ${h.id} → ${v.toUpperCase()} → hipoteses.md`));
+  };
+
+  const confirmarEdicao = (h: Hipotese) => {
+    if (!edicao) return;
+    if (edicao.texto.trim().length < 3) {
+      setEdicao({ ...edicao, erro: `justificativa obrigatória para ${edicao.status === 'confirmada' ? 'confirmar' : 'refutar'}` });
+      justRef.current?.focus();
+      return;
+    }
+    const st = edicao.status;
+    void patch(h, { status: st, justificativa: edicao.texto.trim() }, (hh) => {
+      if (st === 'confirmada') {
+        onEscrito(`✓ ${hh.id} CONFIRMADA → hipoteses.md`, [{ tecla: 'a', rotulo: 'gerar achado', fazer: () => onGerarAchado(hh, achados) }]);
+      } else {
+        const semContra = !(hh.contradiz ?? '').trim();
+        onEscrito(`✓ ${hh.id} REFUTADA → hipoteses.md${semContra ? ' · aviso: nenhum evento "contradiz" vinculado' : ''}`);
+      }
+    });
+  };
+
   useImperativeHandle(ref, () => ({
     onKey(e) {
+      // F6: b/m/l = confiança e 1-4 = status (brief §10); colunas só com ←/→.
+      const hsel = col === 0 ? hips[rows[0] ?? 0] : undefined;
+      if (hsel) {
+        const st = STATUS.find((x) => x.k === e.key);
+        if (st) {
+          mudarStatus(hsel, st.v);
+          return true;
+        }
+        const cf = CONFIANCAS.find((x) => x.k === e.key);
+        if (cf) {
+          void patch(hsel, { confianca: cf.v }, () => onEscrito(`✓ ${hsel.id} confiança ${cf.v.toUpperCase()} → hipoteses.md`));
+          return true;
+        }
+      }
+      if (e.key === 'h' || e.key === 'l') return false;
       const mv = moveKey(e.key, col, rows[col] ?? 0, 2, (c) => (c === 0 ? hips.length : achs.length));
       if (mv) {
         setPos(mv.col, mv.row);
@@ -104,6 +217,15 @@ export const HypAch = forwardRef<ViewHandle, Props>(function HypAch({ caso, modo
     },
     searchCancel: () => setBusca(''),
     escape() {
+      if (conflito) {
+        setConflito(null);
+        return true;
+      }
+      if (edicao) {
+        setEdicao(null);
+        onMsg('alteração de status cancelada', 'info');
+        return true;
+      }
       if (!busca) return false;
       setBusca('');
       onMsg('filtro limpo', 'info');
@@ -185,6 +307,90 @@ export const HypAch = forwardRef<ViewHandle, Props>(function HypAch({ caso, modo
                       </div>
                     )}
                   </dl>
+                  {isSel && (
+                    <div className="hip-acts">
+                      {guiado ? (
+                        <>
+                          <span className="lbl t2">STATUS</span>{' '}
+                          {STATUS.map((x) => (
+                            <button key={x.v} type="button" className={`btn-stamp${st === x.v ? ' is-on' : ''}`} onClick={() => mudarStatus(h, x.v)}>
+                              [{x.k}] {x.v}
+                            </button>
+                          ))}{' '}
+                          <span className="lbl t2">CONFIANÇA</span>{' '}
+                          {CONFIANCAS.map((x) => (
+                            <button
+                              key={x.v}
+                              type="button"
+                              className={`btn-stamp${(h.confianca ?? '').startsWith(x.v.slice(0, 3)) ? ' is-on' : ''}`}
+                              onClick={() => void patch(h, { confianca: x.v }, () => onEscrito(`✓ ${h.id} confiança ${x.v.toUpperCase()} → hipoteses.md`))}
+                            >
+                              [{x.k}] {x.v}
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <span className="t3">[1]ABERTA [2]CONFIRMADA [3]REFUTADA [4]INCONCLUSIVA · [b]BAIXA [m]MÉDIA [l]ALTA · ↵ evidências</span>
+                      )}
+                    </div>
+                  )}
+                  {edicao?.hid === h.id && (
+                    <div
+                      className="bench hip-just"
+                      onKeyDown={(e) => {
+                        if (/^F\d$/.test(e.key)) return;
+                        e.stopPropagation();
+                        if (e.key === 'Enter' && e.ctrlKey) {
+                          e.preventDefault();
+                          confirmarEdicao(h);
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setEdicao(null);
+                        }
+                      }}
+                    >
+                      <label className="bench-l lbl t2" htmlFor={`just-${h.id}`}>
+                        JUSTIFICATIVA PARA {edicao.status === 'confirmada' ? 'CONFIRMAR' : 'REFUTAR'} (obrigatória)
+                      </label>
+                      {guiado && (
+                        <p className="bench-help t2">
+                          {edicao.status === 'confirmada'
+                            ? 'Diga quais evidências comprovam. Confirmar exige ao menos um evento "apoia" (vincule com H na timeline).'
+                            : 'Diga o que mostra que a hipótese não se sustenta. O ideal é ter um evento "contradiz" vinculado.'}
+                        </p>
+                      )}
+                      <textarea
+                        id={`just-${h.id}`}
+                        ref={justRef}
+                        className="bench-ta"
+                        rows={3}
+                        value={edicao.texto}
+                        aria-invalid={!!edicao.erro}
+                        onChange={(e) => setEdicao({ ...edicao, texto: e.target.value, erro: null })}
+                      />
+                      {edicao.erro && (
+                        <p className="red bench-err" role="alert">
+                          ✕ {edicao.erro}
+                        </p>
+                      )}
+                      <p className="bench-actions">
+                        <button type="button" className="btn-stamp btn-main" onClick={() => confirmarEdicao(h)}>
+                          {guiado ? `Gravar ${edicao.status} (Ctrl+Enter)` : 'Ctrl+Enter grava'}
+                        </button>{' '}
+                        <button type="button" className="btn-stamp" onClick={() => setEdicao(null)}>
+                          {guiado ? 'Cancelar (Esc)' : 'Esc'}
+                        </button>
+                      </p>
+                    </div>
+                  )}
+                  {erroCard?.hid === h.id && (
+                    <p className="red bench-err" role="alert">
+                      ✕ {erroCard.msg}
+                    </p>
+                  )}
+                  {conflito?.hid === h.id && (
+                    <ConflictPanel arquivo="hipoteses.md" base={conflito.base} atual={conflito.atual} modo={modo} onRecarregar={conflito.refazer} onManter={() => setConflito(null)} />
+                  )}
                   <span className="t3 hip-linha">hipoteses.md:{h.linha}</span>
                 </li>
               );

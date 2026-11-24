@@ -24,6 +24,10 @@ interface Props {
   onFilter(field: FilterField, value: string): void;
   onMsg(text: string, kind?: MsgKind): void;
   onPrompt(prefill: string, mode: PromptMode): void;
+  /** Entidade a focar ao abrir (pivô vindo do MAPA). */
+  foco?: { kind: EKind; valor: string } | null;
+  /** Voltar ao MAPA ([Backspace]); só existe quando se veio dele. */
+  onVoltar?: () => void;
 }
 
 const COLUNAS: { kind: EKind; field: FilterField; guiado: string; analista: string; explica: string }[] = [
@@ -40,7 +44,7 @@ interface Item {
 }
 
 export const Entities = forwardRef<ViewHandle, Props>(function Entities(props, ref) {
-  const { caso, entidades, resumo, modo, onPivot, onFilter, onMsg, onPrompt } = props;
+  const { caso, entidades, resumo, modo, onPivot, onFilter, onMsg, onPrompt, foco, onVoltar } = props;
   const guiado = modo === 'guiado';
   const evs = useLoad(() => api.eventos(caso, {}), [caso]);
   const events = useMemo(() => (evs?.ok ? evs.v.eventos : []), [evs]);
@@ -86,6 +90,16 @@ export const Entities = forwardRef<ViewHandle, Props>(function Entities(props, r
   // Ao filtrar, volta ao topo das listas.
   useEffect(() => setRows([0, 0, 0, 0, 0]), [busca]);
 
+  // Pivô vindo do MAPA: seleciona a entidade correspondente.
+  useEffect(() => {
+    if (!foco) return;
+    const c = COLUNAS.findIndex((x) => x.kind === foco.kind);
+    const r = listas[c]?.findIndex((it) => it.v === foco.valor) ?? -1;
+    if (c >= 0 && r >= 0) setPos(c, r);
+    else if (entidades) onMsg(`${foco.valor} não está no índice de entidades`, 'info');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foco, entidades]);
+
   useImperativeHandle(ref, () => ({
     onKey(e) {
       let mv = moveKey(e.key, col, rows[col] ?? 0, COLUNAS.length, (c) => listas[c]?.length ?? 0);
@@ -102,6 +116,12 @@ export const Entities = forwardRef<ViewHandle, Props>(function Entities(props, r
       }
       const c = COLUNAS[col]!;
       switch (e.key) {
+        case 'Backspace':
+          if (onVoltar) {
+            onVoltar();
+            return true;
+          }
+          return false;
         case 'Enter':
         case 'p':
           if (sel) onPivot(c.field, sel.v);
@@ -153,6 +173,14 @@ export const Entities = forwardRef<ViewHandle, Props>(function Entities(props, r
 
   return (
     <div className="ent" ref={rootRef} tabIndex={-1}>
+      {onVoltar && !busca && (
+        <div className="strip">
+          <button type="button" className="btn-stamp" onClick={onVoltar} aria-keyshortcuts="Backspace">
+            [Backspace] ◀ MAPA
+          </button>
+          <span className="t2">pivô vindo do mapa do ataque{foco ? `: ${foco.valor}` : ''}</span>
+        </div>
+      )}
       {busca && (
         <div className="strip">
           <span className="lbl t2">BUSCA</span> <span className="amber">/{busca}</span>

@@ -9,6 +9,7 @@ import { useCharWidth, useElementSize } from '../../lib/hooks';
 import { COLS, attackCell, eventFlags, hostDisplay, signalWords } from './cells';
 import { type Modo, sourceLong, typePt } from '../../lib/mode';
 import { type TacticOf, tecnicaPt } from '../../lib/attack-pt';
+import { useConfirmadas } from '../../lib/conf';
 
 export interface EventGridHandle {
   /** Rola até o evento i e, se pedido, move o foco do DOM para a célula (i, c). */
@@ -71,7 +72,8 @@ interface RowProps {
 const Row = memo(function Row({ ev, i, r, top, sel, col, marked, resumoChars, hit, guiado, tacticOf, onCell, onActivate }: RowProps) {
   const { hms, ms } = splitTs(ev.ts_utc);
   const host = hostDisplay(ev);
-  const att = attackCell(ev, tacticOf);
+  const conf = useConfirmadas();
+  const att = attackCell(ev, tacticOf, conf);
   const fl = eventFlags(ev);
   const resumo = ev.description ?? ev.cmdline ?? ev.action ?? '';
   const tab = (c: number) => (sel && col === c ? 0 : -1);

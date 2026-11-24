@@ -14,6 +14,8 @@ import { COLS, cellCopyValue, cellTarget, coverageNotes, markSource, searchHayst
 import { type Modo, loadDicaOculta, saveDicaOculta } from '../../lib/mode';
 import { makeTacticOf } from '../../lib/attack-pt';
 import { isEmptyFilter } from '../../lib/filters';
+import { PromoteForm } from '../bench/PromoteForm';
+import { LinkHypForm } from '../bench/LinkHypForm';
 
 export interface TimelineHandle {
   /** Trata a tecla; devolve true se consumiu. */
@@ -28,6 +30,8 @@ export interface TimelineHandle {
   escape(): boolean;
   /** Seleciona e destaca eventos (idx) vindos de refs; devolve quantos estão na lista atual. */
   focusEvents(idxs: number[], rotulo: string): number;
+  /** Abre a bancada (promover/vincular) no evento selecionado. */
+  abrirBancada(tipo: 'achado' | 'hip', textoInicial?: string): void;
 }
 
 export type MsgKind = 'ok' | 'err' | 'info';
@@ -50,6 +54,10 @@ interface Props {
   onPrompt(prefill: string, mode: PromptMode): void;
   modo: Modo;
   onOverview(): void;
+  /** Revisão dos dados do caso (sobe a cada escrita/ingestão). */
+  rev: number;
+  /** Escrita concluída: mensagem de status (o shell recarrega os dados e oferece [o] F6). */
+  onEscrito(msg: string): void;
 }
 
 /** Posição do evento com idx mais próximo (lista filtrada é ordenada por idx). */
@@ -79,7 +87,8 @@ function nearestTs(events: PeritoEvent[], ms: number): number {
 }
 
 export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(props, ref) {
-  const { caso, resp, loading, error, hist, resumo, filter, rowH, onPivot, onClause, onRemoveClause, onClearWindow, onWindow, onMsg, onPrompt, modo, onOverview } = props;
+  const { caso, resp, loading, error, hist, resumo, filter, rowH, onPivot, onClause, onRemoveClause, onClearWindow, onWindow, onMsg, onPrompt, modo, onOverview, rev, onEscrito } = props;
+  const [bancada, setBancada] = useState<{ tipo: 'achado' | 'hip'; ev: PeritoEvent; texto?: string } | null>(null);
   const guiado = modo === 'guiado';
   const [dicaOculta, setDicaOculta] = useState(loadDicaOculta);
   const tacticOf = useMemo(() => makeTacticOf(resumo?.tecnicas), [resumo]);
@@ -361,10 +370,10 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
             onPrompt('ir ', 'cmd');
             return true;
           case 'a':
-            onMsg('promover a achado: entrega I4', 'info');
+            if (ev) setBancada({ tipo: 'achado', ev });
             return true;
           case 'H':
-            onMsg('vincular a hipótese: entrega I4', 'info');
+            if (ev) setBancada({ tipo: 'hip', ev });
             return true;
           default:
             return false;
@@ -426,6 +435,11 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
           return true;
         }
         return false;
+      },
+      abrirBancada(tipo: 'achado' | 'hip', textoInicial?: string) {
+        const alvo = events[cur];
+        if (alvo) setBancada({ tipo, ev: alvo, texto: textoInicial });
+        else onMsg('nenhum evento selecionado para a bancada', 'err');
       },
       focusEvents(idxs: number[], rotulo: string): number {
         const set = new Set(idxs);
@@ -496,7 +510,7 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
   })();
 
   return (
-    <div className={`tl${pinned ? ' is-pinned' : ''}`}>
+    <div className={`tl${pinned ? ' is-pinned' : ''}${bancada ? ' has-bancada' : ''}`}>
       <Seismograph
         hist={hist}
         sources={sources}
@@ -592,6 +606,50 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
           modo={modo}
           tacticOf={tacticOf}
           onFilter={(field, value) => onClause({ field, neg: false, value }, 'DETALHE')}
+          onPromover={() => detailEv && setBancada({ tipo: 'achado', ev: detailEv })}
+          onVincular={() => detailEv && setBancada({ tipo: 'hip', ev: detailEv })}
+          bancada={
+            bancada ? (
+              bancada.tipo === 'achado' ? (
+                <PromoteForm
+                  key={`a${bancada.ev.idx}`}
+                  caso={caso}
+                  ev={bancada.ev}
+                  modo={modo}
+                  tacticOf={tacticOf}
+                  textoInicial={bancada.texto}
+                  onMsg={onMsg}
+                  onFechar={() => {
+                    setBancada(null);
+                    gridRef.current?.reveal(cur, col, true);
+                  }}
+                  onSalvo={(id) => {
+                    setBancada(null);
+                    onEscrito(`✓ ACHADO ${id} gravado → achados.md`);
+                    gridRef.current?.reveal(cur, col, true);
+                  }}
+                />
+              ) : (
+                <LinkHypForm
+                  key={`h${bancada.ev.idx}`}
+                  caso={caso}
+                  ev={bancada.ev}
+                  modo={modo}
+                  rev={rev}
+                  onMsg={onMsg}
+                  onFechar={() => {
+                    setBancada(null);
+                    gridRef.current?.reveal(cur, col, true);
+                  }}
+                  onSalvo={(m) => {
+                    setBancada(null);
+                    onEscrito(m);
+                    gridRef.current?.reveal(cur, col, true);
+                  }}
+                />
+              )
+            ) : null
+          }
           onCopy={(label, value) => void copy(label, value)}
           onMark={() => detailEv && toggleMark(detailEv)}
           onPivot={(field, value) => onPivot(field, value, 'DETALHE')}

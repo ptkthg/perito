@@ -24,7 +24,15 @@ const TECLAS: [string, string][] = [
   ['Shift+L', 'alterna modo claro'],
   ['arrastar no sismógrafo', 'define a janela de tempo; clique vai ao horário'],
   ['[ver caso inteiro]', 'no GUIADO o sismógrafo abre no período suspeito; o botão alterna'],
-  ['a · H', 'promover a achado · vincular a hipótese (entrega I4)'],
+  ['a · H (F1)', 'bancada: promover a achado · vincular a hipótese (Ctrl+Enter grava)'],
+  ['F6 · 1-4 · b/m/l', 'status ABERTA/CONFIRMADA/REFUTADA/INCONCLUSIVA · confiança BAIXA/MÉDIA/ALTA'],
+  ['F4 · a · d · m', 'IOC: aprova · descarta com motivo · marca para lote'],
+  ['i (F0/F5)', 'ingerir: escolher arquivos (ou arraste para a zona INGERIR)'],
+  ['o · a (após gravar)', 'ações da linha de status: abrir no F6 · gerar achado'],
+  ['gm · mapa', 'MAPA DO ATAQUE'],
+  ['mapa: ←→ ↑↓', 'coluna · nó; 1º clique seleciona, 2º clique/Enter/p pivota na F2'],
+  ['mapa: n/N . , c + -', 'passo do caminho · arestas do nó · só o caminho · expandir/recolher grupo'],
+  ['F2: Backspace', 'volta ao MAPA quando o pivô veio dele'],
   ['F2 · j/k h/l ↵ f y /', 'entidades: item · coluna · pivô · filtro · copia · filtra a lista'],
   ['F6 · ↵ · clique em ref', 'hipóteses/achados: abre as evidências (A6, arquivo.csv:15-17) na timeline'],
   ['n / N (após ref)', 'percorre os eventos destacados vindos de uma ref; Esc limpa'],
@@ -133,6 +141,12 @@ export function HelpOverlay({ onClose }: { onClose(): void }) {
               </div>
             ))}
           </dl>
+          <h2 className="lbl t2 help-gap">MAPA</h2>
+          <p className="help-src">
+            ┌─┐ máquina · ╔═╗ conta · ┏━┓ aplicativo · ╎╌╎ e-mail · › endereço externo · <span className="chip-passo">[n]</span> passo do ataque ·{' '}
+            <span className="red">⊘</span> sem EDR (hachura) · <span className="red">▲</span> volume · ✕ falha ✓ sucesso · tracejado = só falhas · âmbar = caminho do
+            atacante
+          </p>
           <h2 className="lbl t2 help-gap">FONTES</h2>
           <p className="help-src">
             <span style={{ color: 'var(--src-def)' }}>DEF</span> defender · <span style={{ color: 'var(--src-sen)' }}>SEN</span> sentinel ·{' '}

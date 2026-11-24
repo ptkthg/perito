@@ -19,7 +19,8 @@ export type Command =
   | { kind: 'ir'; ts: string }
   | { kind: 'limpar' }
   | { kind: 'desfazer' }
-  | { kind: 'ajuda' };
+  | { kind: 'ajuda' }
+  | { kind: 'mapa' };
 
 export const COMMANDS: { name: string; args: string; help: string }[] = [
   { name: 'filtro', args: 'campo=v [campo!=v …]', help: 'adiciona filtros (host user ip fonte tipo texto hash dominio tatica)' },
@@ -29,6 +30,7 @@ export const COMMANDS: { name: string; args: string; help: string }[] = [
   { name: 'limpar', args: '', help: 'remove todos os filtros' },
   { name: 'u', args: '', help: 'desfaz o último filtro' },
   { name: 'ajuda', args: '', help: 'mapa de teclas e glifos' },
+  { name: 'mapa', args: '', help: 'abre o MAPA DO ATAQUE (gm)' },
 ];
 
 const PIVOT_FLAGS: Record<string, FilterField> = {
@@ -174,6 +176,8 @@ export function parseCommand(input: string, ctx: ParseCtx): Command {
     case '?':
     case 'h':
       return { kind: 'ajuda' };
+    case 'mapa':
+      return { kind: 'mapa' };
     default:
       throw new Error(`comando desconhecido: ${cmd} (digite ajuda)`);
   }

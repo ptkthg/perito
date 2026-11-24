@@ -8,6 +8,10 @@ import type { FilterField } from '../../lib/filters';
 import { KILL_CHAIN, makeTacticOf, tecnicaPt } from '../../lib/attack-pt';
 import { hhmm, sourceColor, tsMs } from '../../lib/format';
 import { sourceLong } from '../../lib/mode';
+import { type Confirmadas, sugerida } from '../../lib/bancada';
+import { useConfirmadas } from '../../lib/conf';
+import type { Modo } from '../../lib/mode';
+import { MapCompact } from './MapCompact';
 
 interface Props {
   caso: string;
@@ -16,6 +20,11 @@ interface Props {
   onPivot(field: FilterField, value: string): void;
   onTatica(tatica: string): void;
   onCobertura(): void;
+  rev: number;
+  modo: Modo;
+  onAbrirMapa(passo: number | null): void;
+  /** Zona INGERIR (montada pelo shell, que também trata [i]). */
+  ingest: React.ReactNode;
 }
 
 type Load<T> = { ok: true; v: T } | { ok: false; err: string } | null;
@@ -84,12 +93,11 @@ interface Fase {
   sugerido: boolean;
 }
 
-function computeFases(events: PeritoEvent[], resumo: Resumo | null): Fase[] {
+function computeFases(events: PeritoEvent[], resumo: Resumo | null, conf: Confirmadas): Fase[] {
   const tacticOf = makeTacticOf(resumo?.tecnicas);
   const acc = new Map<string, { n: number; first: string | null; techs: Map<string, number>; allHeur: boolean }>();
   for (const ev of events) {
     const seen = new Set<string>();
-    const heur = ev.extra.mitre_heuristica ?? [];
     for (const t of ev.mitre) {
       const tac = tacticOf(t);
       if (!tac) continue;
@@ -100,7 +108,7 @@ function computeFases(events: PeritoEvent[], resumo: Resumo | null): Fase[] {
         if (!a.first || ev.ts_utc < a.first) a.first = ev.ts_utc;
       }
       a.techs.set(t, (a.techs.get(t) ?? 0) + 1);
-      if (!heur.includes(t)) a.allHeur = false;
+      if (!sugerida(ev, t, conf)) a.allHeur = false;
       acc.set(tac, a);
     }
   }
@@ -128,14 +136,16 @@ function Section({ title, children, id }: { title: string; children: React.React
   );
 }
 
-export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertura }: Props) {
-  const doc = useLoad(() => api.doc(caso, 'caso'), [caso]);
-  const hip = useLoad<Hipotese[]>(() => api.hipoteses(caso), [caso]);
-  const iocs = useLoad<IocsResp>(() => api.iocs(caso), [caso]);
-  const evs = useLoad(() => api.eventos(caso, {}), [caso]);
+export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertura, rev, modo, onAbrirMapa, ingest }: Props) {
+  const doc = useLoad(() => api.doc(caso, 'caso'), [caso, rev]);
+  const hip = useLoad<Hipotese[]>(() => api.hipoteses(caso), [caso, rev]);
+  const iocs = useLoad<IocsResp>(() => api.iocs(caso), [caso, rev]);
+  const evs = useLoad(() => api.eventos(caso, {}), [caso, rev]);
+  const vazio = resumo !== null && resumo.total_eventos === 0;
 
   const resumoParas = doc?.ok ? extractResumo(doc.v.conteudo) : null;
-  const fases = useMemo(() => (evs?.ok ? computeFases(evs.v.eventos, resumo) : null), [evs, resumo]);
+  const conf = useConfirmadas();
+  const fases = useMemo(() => (evs?.ok ? computeFases(evs.v.eventos, resumo, conf) : null), [evs, resumo, conf]);
   const abertas = hip?.ok ? hip.v.filter((h) => (h.status ?? '').toLowerCase() === 'aberta') : [];
   const semEdr = new Set(resumo?.hosts_sem_edr ?? []);
 
@@ -177,6 +187,14 @@ export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertu
         )}
       </Section>
 
+      {vazio && (
+        <Section title="COMECE POR AQUI: INGERIR EVIDÊNCIAS" id="ov-ingerir-topo">
+          {ingest}
+        </Section>
+      )}
+      <Section title="MAPA DO ATAQUE" id="ov-mapa">
+        <MapCompact caso={caso} rev={rev} modo={modo} onAbrir={onAbrirMapa} />
+      </Section>
       <Section title="FASES DO ATAQUE" id="ov-fases">
         {!evs && <p className="t3">CARREGANDO eventos ...</p>}
         {evs && !evs.ok && <p className="red">ERRO {evs.err}</p>}
@@ -344,6 +362,11 @@ export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertu
         </Section>
       </div>
 
+      {!vazio && (
+        <Section title="INGERIR MAIS EVIDÊNCIAS" id="ov-ingerir">
+          {ingest}
+        </Section>
+      )}
       <Section title="PRÓXIMOS PASSOS" id="ov-passos">
         {!hip && <p className="t3">CARREGANDO hipoteses.md ...</p>}
         {hip?.ok && abertas.length === 0 && <p className="t2">nenhuma hipótese aberta</p>}

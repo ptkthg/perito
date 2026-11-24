@@ -3,7 +3,9 @@
 // Y copia todos os visíveis defanged, um por linha. Enter/p pivô na timeline.
 // Aprovar/descartar: placeholder visível (bancada, entrega E3).
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { api } from '../../lib/api';
+import { ApiError, ConflitoError, api, describeError } from '../../lib/api';
+import { MOTIVOS, type Confianca, loteIoc } from '../../lib/bancada';
+import { ConflictPanel } from '../bench/ConflictPanel';
 import type { IocCandidato } from '../../lib/types';
 import type { FilterField } from '../../lib/filters';
 import type { Modo } from '../../lib/mode';
@@ -21,6 +23,15 @@ interface Props {
   onPivot(field: FilterField, value: string): void;
   onMsg(text: string, kind?: MsgKind): void;
   onPrompt(prefill: string, mode: PromptMode): void;
+  rev: number;
+  onEscrito(msg: string): void;
+}
+
+interface Descarte {
+  alvos: Linha[];
+  motivo: string | null;
+  outro: string;
+  erro: string | null;
 }
 
 const TIPO_PT: Record<string, string> = {
@@ -54,9 +65,14 @@ const toLinha = (c: IocCandidato | Record<string, string>): Linha => ({
   valor: String(c.valor ?? ''),
 });
 
-export const Ioc = forwardRef<ViewHandle, Props>(function Ioc({ caso, modo, onPivot, onMsg, onPrompt }, ref) {
+export const Ioc = forwardRef<ViewHandle, Props>(function Ioc({ caso, modo, onPivot, onMsg, onPrompt, rev, onEscrito }, ref) {
   const guiado = modo === 'guiado';
-  const data = useLoad(() => api.iocs(caso), [caso]);
+  const data = useLoad(() => api.iocs(caso), [caso, rev]);
+  const [marcados, setMarcados] = useState<Set<string>>(new Set());
+  const [descarte, setDescarte] = useState<Descarte | null>(null);
+  const [conflito, setConflito] = useState<{ atual: string; refazer: () => void } | null>(null);
+  const [gravando, setGravando] = useState(false);
+  const outroRef = useRef<HTMLInputElement>(null);
   const [defanged, setDefanged] = useState(true);
   const [busca, setBusca] = useState('');
   const [col, setCol] = useState(0);
@@ -82,7 +98,77 @@ export const Ioc = forwardRef<ViewHandle, Props>(function Ioc({ caso, modo, onPi
       });
   };
 
-  const bancada = (acao: string) => onMsg(`${acao}: bancada de IOCs é a entrega E3 (ainda só leitura)`, 'info');
+  const chave = (l: { tipo: string; valor: string }) => `${l.tipo}\u0000${l.valor}`;
+  const registrados = useMemo(() => new Map(reg.map((l) => [chave(l), String(l.r.confianca ?? '')])), [reg]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Alvos da ação: as linhas marcadas (m) ou, sem marcas, a linha selecionada. */
+  const alvos = (): Linha[] => {
+    const todos = [...cand, ...reg];
+    const m = todos.filter((l) => marcados.has(chave(l)));
+    return m.length ? m : sel ? [sel] : [];
+  };
+
+  /** Registra candidatos ainda fora do iocs.csv (POST) e muda a confiança em lote (PATCH itens[]). */
+  const aplicar = async (linhas: Linha[], confianca: Confianca, motivo?: string) => {
+    let lote;
+    try {
+      lote = loteIoc(linhas, confianca, motivo);
+    } catch (x) {
+      onMsg(`✕ ${(x as Error).message}`, 'err');
+      return false;
+    }
+    setGravando(true);
+    const fazer = async (): Promise<boolean> => {
+      try {
+        for (const l of linhas) {
+          if (registrados.has(chave(l))) continue;
+          const r = l.r;
+          const corpo: Record<string, string> = { tipo: l.tipo, valor: l.valor, confianca: 'candidato' };
+          for (const k of ['primeira_vez_utc', 'ultima_vez_utc', 'fonte', 'contexto']) if (r[k]) corpo[k] = String(r[k]);
+          await api.criarIoc(caso, corpo);
+        }
+        await api.patchIoc(caso, lote.itens.length === 1 ? { ...lote.itens[0] } : lote);
+        setConflito(null);
+        setMarcados(new Set());
+        const n = lote.itens.length;
+        onEscrito(`✓ ${n} IOC${n > 1 ? 's' : ''} ${confianca === 'confirmado' ? `aprovado${n > 1 ? 's' : ''}` : `descartado${n > 1 ? 's' : ''} (${motivo})`} → iocs.csv`);
+        return true;
+      } catch (x) {
+        if (x instanceof ConflitoError) {
+          setConflito({ atual: x.conflito.conteudoAtual, refazer: () => void api.iocs(caso).then(() => fazer()) });
+        } else {
+          const m = x instanceof ApiError ? `${x.message}${x.detalhe ? ` — ${x.detalhe}` : ''}` : describeError(x);
+          onMsg(`✕ IOC não gravado: ${m}`, 'err');
+        }
+        return false;
+      } finally {
+        setGravando(false);
+      }
+    };
+    return fazer();
+  };
+
+  const abrirDescarte = () => {
+    const a = alvos();
+    if (!a.length) return;
+    setDescarte({ alvos: a, motivo: null, outro: '', erro: null });
+  };
+
+  const confirmarDescarte = () => {
+    if (!descarte) return;
+    let motivo = descarte.motivo;
+    if (motivo === 'outro') motivo = `outro: ${descarte.outro.trim()}`;
+    if (!motivo || motivo === 'outro: ') {
+      setDescarte({ ...descarte, erro: 'motivo obrigatório: escolha [1]–[4]' });
+      return;
+    }
+    void aplicar(descarte.alvos, 'descartado', motivo).then((ok) => ok && setDescarte(null));
+  };
+
+  const bancada = (acao: 'aprovar' | 'descartar', l: Linha) => {
+    if (acao === 'aprovar') void aplicar(marcados.size ? alvos() : [l], 'confirmado');
+    else setDescarte({ alvos: marcados.size ? alvos() : [l], motivo: null, outro: '', erro: null });
+  };
 
   useImperativeHandle(ref, () => ({
     onKey(e) {
@@ -102,6 +188,22 @@ export const Ioc = forwardRef<ViewHandle, Props>(function Ioc({ caso, modo, onPi
         return true;
       }
       switch (e.key) {
+        case 'a':
+          if (!gravando) void aplicar(alvos(), 'confirmado');
+          return true;
+        case 'd':
+          abrirDescarte();
+          return true;
+        case 'm':
+          if (sel) {
+            const k = chave(sel);
+            const n = new Set(marcados);
+            if (n.has(k)) n.delete(k);
+            else n.add(k);
+            setMarcados(n);
+            onMsg(`${n.size} IOC(s) marcado(s) para lote · a aprova · d descarta`, 'info');
+          }
+          return true;
         case 'D':
           setDefanged(!defanged);
           onMsg(defanged ? 'exibindo valores REAIS (D volta ao defanged)' : 'exibindo defanged (hxxp, [.], [@])', defanged ? 'err' : 'ok');
@@ -133,6 +235,15 @@ export const Ioc = forwardRef<ViewHandle, Props>(function Ioc({ caso, modo, onPi
     },
     searchCancel: () => setBusca(''),
     escape() {
+      if (descarte) {
+        setDescarte(null);
+        return true;
+      }
+      if (marcados.size) {
+        setMarcados(new Set());
+        onMsg('marcas de lote limpas', 'info');
+        return true;
+      }
       if (!busca) return false;
       setBusca('');
       return true;
@@ -177,6 +288,9 @@ export const Ioc = forwardRef<ViewHandle, Props>(function Ioc({ caso, modo, onPi
                   <span className="selbar" aria-hidden>
                     {isSel ? '▌' : ' '}
                   </span>
+                  <span className="amber ioc-mark" aria-label={marcados.has(chave(l)) ? 'marcado para lote' : undefined}>
+                    {marcados.has(chave(l)) ? '*' : ' '}
+                  </span>
                   <button
                     type="button"
                     className="pivot"
@@ -198,13 +312,17 @@ export const Ioc = forwardRef<ViewHandle, Props>(function Ioc({ caso, modo, onPi
                 <td className="ioc-ctx ellip" title={String(r.contexto ?? '')}>
                   {String(r.contexto ?? '')}
                 </td>
-                <td className={String(r.confianca ?? '') === 'candidato' ? 'amber' : ''}>{String(r.confianca ?? r.status ?? '—')}</td>
+                {(() => {
+                  const regc = c === 0 ? registrados.get(chave(l)) : String(r.confianca ?? '');
+                  const v = regc || String(r.confianca ?? r.status ?? '—');
+                  return <td className={`ioc-st ioc-st-${v}`}>{v}</td>;
+                })()}
                 <td className="ioc-act">
-                  <button type="button" className="btn-stamp btn-off" onClick={() => bancada('aprovar')} title="bancada: entrega E3">
-                    aprovar
+                  <button type="button" className="btn-stamp" onClick={() => bancada('aprovar', l)} title="a: aprova (iocs.csv, confirmado)">
+                    {guiado ? 'aprovar' : 'a'}
                   </button>{' '}
-                  <button type="button" className="btn-stamp btn-off" onClick={() => bancada('descartar')} title="bancada: entrega E3">
-                    descartar
+                  <button type="button" className="btn-stamp" onClick={() => bancada('descartar', l)} title="d: descarta com motivo">
+                    {guiado ? 'descartar' : 'd'}
                   </button>
                 </td>
               </tr>
@@ -222,12 +340,89 @@ export const Ioc = forwardRef<ViewHandle, Props>(function Ioc({ caso, modo, onPi
         {busca && <span className="amber">/{busca}</span>}
         <span className="strip-clauses t3">
           {guiado
-            ? 'indicadores de comprometimento: endereços, domínios e arquivos ligados ao ataque · D mostra/oculta o valor real · y copia o real · Y copia todos (defanged) · ↵ pivô'
-            : 'D defang · y copia real · Y copia visíveis defanged · ↵ pivô · / filtra'}
+            ? 'indicadores de comprometimento: endereços, domínios e arquivos ligados ao ataque · a aprova · d descarta · m marca para lote · D mostra/oculta o valor real · y copia · Y copia todos (defanged) · ↵ pivô'
+            : 'a aprova · d descarta · m lote · D defang · y copia real · Y visíveis defanged · ↵ pivô · / filtra'}
         </span>
       </div>
       {!data && <p className="inline-state t3">CARREGANDO /iocs ...</p>}
       {data && !data.ok && <p className="inline-state red">ERRO {data.err}</p>}
+      {conflito && (
+        <ConflictPanel arquivo="iocs.csv" base={null} atual={conflito.atual} modo={modo} onRecarregar={conflito.refazer} onManter={() => setConflito(null)} />
+      )}
+      {descarte && (
+        <div
+          className="bench ioc-desc"
+          role="group"
+          aria-label="Descartar IOC"
+          onKeyDown={(e) => {
+            if (/^F\d$/.test(e.key)) return;
+            e.stopPropagation();
+            const inp = e.target instanceof HTMLInputElement;
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setDescarte(null);
+            } else if (e.key === 'Enter') {
+              e.preventDefault();
+              confirmarDescarte();
+            } else if (!inp && /^[1-4]$/.test(e.key)) {
+              e.preventDefault();
+              const m = e.key === '4' ? 'outro' : MOTIVOS[Number(e.key) - 1]!;
+              setDescarte({ ...descarte, motivo: m, erro: null });
+              if (m === 'outro') requestAnimationFrame(() => outroRef.current?.focus());
+            }
+          }}
+          ref={(el) => {
+            if (el && !el.contains(document.activeElement)) el.querySelector<HTMLElement>('button')?.focus();
+          }}
+        >
+          <p className="bench-h">
+            <span className="lbl">DESCARTAR {descarte.alvos.length} IOC{descarte.alvos.length > 1 ? 'S' : ''}</span>{' '}
+            <span className="t3">{descarte.alvos.map((a) => defang(a.valor, a.tipo)).join(' · ').slice(0, 120)}</span>
+          </p>
+          {guiado && <p className="bench-help t2">O motivo vai para o contexto do IOC em iocs.csv. Escolha um ([1]–[4]) e confirme com Enter.</p>}
+          <div className="chips" role="radiogroup" aria-label="Motivo do descarte">
+            {[...MOTIVOS, 'outro'].map((m, i) => (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={descarte.motivo === m}
+                className={`chip${descarte.motivo === m ? ' is-on' : ''}`}
+                onClick={() => {
+                  setDescarte({ ...descarte, motivo: m, erro: null });
+                  if (m === 'outro') requestAnimationFrame(() => outroRef.current?.focus());
+                }}
+              >
+                [{i + 1}] {m}
+                {m === 'outro' ? ':' : ''}
+              </button>
+            ))}
+            {descarte.motivo === 'outro' && (
+              <input
+                ref={outroRef}
+                className="bench-in ioc-outro"
+                maxLength={200}
+                value={descarte.outro}
+                placeholder="descreva (até 200)"
+                onChange={(e) => setDescarte({ ...descarte, outro: e.target.value, erro: null })}
+              />
+            )}
+          </div>
+          {descarte.erro && (
+            <p className="red bench-err" role="alert">
+              ✕ {descarte.erro}
+            </p>
+          )}
+          <p className="bench-actions">
+            <button type="button" className="btn-stamp btn-main" onClick={confirmarDescarte}>
+              {guiado ? 'Descartar (Enter)' : 'Enter descarta'}
+            </button>{' '}
+            <button type="button" className="btn-stamp" onClick={() => setDescarte(null)}>
+              {guiado ? 'Cancelar (Esc)' : 'Esc'}
+            </button>
+          </p>
+        </div>
+      )}
       {data?.ok && (
         <div className="ioc-body">
           <section aria-labelledby="ioc-c">

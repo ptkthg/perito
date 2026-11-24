@@ -20,6 +20,53 @@ import type {
 } from './types';
 import { compileQuery, queryString } from './filters';
 import { tsMs } from './format';
+import type { Grafo } from './graph';
+import { type Conflito, parseConflito } from './bancada';
+
+export interface Formato {
+  fonte: string;
+  descricao: string;
+}
+
+export interface IngestaoResult {
+  ok: boolean;
+  arquivo: string;
+  fonte: string;
+  eventos: number;
+  ignorados: number;
+  sha256: string;
+  detectado: boolean;
+  mensagem?: string;
+}
+
+export interface EscritaOk {
+  ok: true;
+  versao: string;
+  id?: string;
+  existente?: boolean;
+  [k: string]: unknown;
+}
+
+export interface NovaHipotese {
+  titulo: string;
+  confianca: string;
+  sustentacao?: string;
+  confirmaria?: string;
+  refutaria?: string;
+  proximo_passo?: string;
+  fase?: string;
+}
+
+export interface PatchHipotese {
+  status?: string;
+  confianca?: string;
+  proximo_passo?: string;
+  justificativa?: string;
+  refs_add?: { ref: string; relacao: 'apoia' | 'contradiz' }[];
+}
+
+/** Arquivo-alvo de cada escrita (para versão otimista e mensagens). */
+export type Arquivo = 'achados.md' | 'hipoteses.md' | 'iocs.csv' | 'limitacoes.md';
 
 export interface PeritoApi {
   readonly modo: 'api' | 'fixtures';
@@ -33,6 +80,36 @@ export interface PeritoApi {
   doc(id: string, nome: string): Promise<DocConteudo>;
   hipoteses(id: string): Promise<Hipotese[]>;
   achados(id: string): Promise<Achado[]>;
+  grafo(id: string, relevantes?: boolean): Promise<Grafo>;
+  formatos(): Promise<Formato[]>;
+  // ---- escritas (spec 06); todas mandam `versao` e podem lançar ConflitoError (409)
+  criarAchado(id: string, b: { idx: number; achado: string; attack: string[] }): Promise<EscritaOk>;
+  criarHipotese(id: string, b: NovaHipotese): Promise<EscritaOk>;
+  patchHipotese(id: string, hn: string, b: PatchHipotese): Promise<EscritaOk>;
+  criarIoc(id: string, b: Record<string, string>): Promise<EscritaOk>;
+  patchIoc(id: string, b: Record<string, unknown>): Promise<EscritaOk>;
+  criarLimitacao(id: string, b: { limitacao: string; impacto: string; mitigacao: string }): Promise<EscritaOk>;
+  ingerir(id: string, f: File, opts: { fonte?: string; obs?: string }, progresso?: (enviados: number, total: number) => void): Promise<IngestaoResult>;
+}
+
+// ---------------------------------------------------------------- versões (X-Perito-Versao)
+const versoes = new Map<string, string>();
+const vk = (caso: string, arq: string) => `${caso}\u0000${arq}`;
+export const versaoDe = (caso: string, arq: string) => versoes.get(vk(caso, arq));
+export const setVersao = (caso: string, arq: string, v: string | null | undefined) => {
+  if (v) versoes.set(vk(caso, arq), v);
+};
+
+/** 409: o arquivo mudou depois da leitura. Leva o conteúdo atual para o diff. */
+export class ConflitoError extends Error {
+  readonly arquivo: string;
+  readonly conflito: Conflito;
+  constructor(arquivo: string, c: Conflito) {
+    super(`conflito em ${arquivo}`);
+    this.name = 'ConflitoError';
+    this.arquivo = arquivo;
+    this.conflito = c;
+  }
 }
 
 /** Erro de API com status HTTP e corpo {erro, detalhe} quando houver. */
@@ -60,10 +137,10 @@ function readToken(): string | null {
 
 const enc = encodeURIComponent;
 
-async function getJson<T>(rota: string, headers: Record<string, string> = {}): Promise<T> {
+async function request<T>(rota: string, init: RequestInit & { headers?: Record<string, string> } = {}, arquivo?: string): Promise<{ data: T; versao: string | null }> {
   let resp: Response;
   try {
-    resp = await fetch(rota, { headers: { Accept: 'application/json', ...headers }, cache: 'no-store' });
+    resp = await fetch(rota, { ...init, headers: { Accept: 'application/json', ...(init.headers ?? {}) }, cache: 'no-store' });
   } catch (e) {
     throw new ApiError(0, 'falha de rede', rota, e instanceof Error ? e.message : String(e));
   }
@@ -76,10 +153,16 @@ async function getJson<T>(rota: string, headers: Record<string, string> = {}): P
     throw new ApiError(resp.status, 'JSON inválido', rota, text.slice(0, 120));
   }
   if (!resp.ok) {
+    const c = parseConflito(resp.status, body);
+    if (c) throw new ConflitoError(arquivo ?? rota, c);
     const b = (body ?? {}) as { erro?: string; detalhe?: string };
     throw new ApiError(resp.status, b.erro ?? `HTTP ${resp.status}`, rota, b.detalhe);
   }
-  return body as T;
+  return { data: body as T, versao: resp.headers.get('X-Perito-Versao') };
+}
+
+async function getJson<T>(rota: string, headers: Record<string, string> = {}): Promise<T> {
+  return (await request<T>(rota, { headers })).data;
 }
 
 // ---------------------------------------------------------------- API real
@@ -91,6 +174,85 @@ class RealApi implements PeritoApi {
   }
   private get<T>(path: string) {
     return getJson<T>(`/api${path}`, this.headers());
+  }
+  /** GET que guarda X-Perito-Versao do arquivo-alvo. */
+  private async getV<T>(path: string, caso: string, arq: string): Promise<T> {
+    const r = await request<T>(`/api${path}`, { headers: this.headers() });
+    setVersao(caso, arq, r.versao ?? (r.data as { versao?: string } | null)?.versao);
+    return r.data;
+  }
+  /** Garante uma versão conhecida antes de escrever (lendo o arquivo-alvo se preciso). */
+  private async versao(caso: string, arq: Arquivo): Promise<string> {
+    const v = versaoDe(caso, arq);
+    if (v) return v;
+    if (arq === 'achados.md') await this.achados(caso);
+    else if (arq === 'hipoteses.md') await this.hipoteses(caso);
+    else if (arq === 'iocs.csv') await this.iocs(caso);
+    else await this.doc(caso, 'limitacoes');
+    return versaoDe(caso, arq) ?? '0-0';
+  }
+  private async escrever(method: 'POST' | 'PATCH', caso: string, path: string, arq: Arquivo, body: Record<string, unknown>): Promise<EscritaOk> {
+    const versao = await this.versao(caso, arq);
+    const r = await request<EscritaOk>(
+      `/api/casos/${enc(caso)}${path}`,
+      { method, headers: { ...this.headers(), 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, versao }) },
+      arq,
+    );
+    setVersao(caso, arq, r.data.versao);
+    return r.data;
+  }
+  grafo(id: string, relevantes = false) {
+    return this.get<Grafo>(`/casos/${enc(id)}/grafo${relevantes ? '?relevantes=1' : ''}`);
+  }
+  formatos() {
+    return this.get<Formato[]>('/formatos');
+  }
+  criarAchado(id: string, b: { idx: number; achado: string; attack: string[] }) {
+    return this.escrever('POST', id, '/achados', 'achados.md', b);
+  }
+  criarHipotese(id: string, b: NovaHipotese) {
+    return this.escrever('POST', id, '/hipoteses', 'hipoteses.md', { ...b });
+  }
+  patchHipotese(id: string, hn: string, b: PatchHipotese) {
+    return this.escrever('PATCH', id, `/hipoteses/${enc(hn)}`, 'hipoteses.md', { ...b });
+  }
+  criarIoc(id: string, b: Record<string, string>) {
+    return this.escrever('POST', id, '/iocs', 'iocs.csv', b);
+  }
+  patchIoc(id: string, b: Record<string, unknown>) {
+    return this.escrever('PATCH', id, '/iocs', 'iocs.csv', b);
+  }
+  criarLimitacao(id: string, b: { limitacao: string; impacto: string; mitigacao: string }) {
+    return this.escrever('POST', id, '/limitacoes', 'limitacoes.md', b);
+  }
+  /** Um arquivo por requisição: bytes brutos (octet-stream); progresso via XHR upload.onprogress. */
+  ingerir(id: string, f: File, opts: { fonte?: string; obs?: string }, progresso?: (enviados: number, total: number) => void): Promise<IngestaoResult> {
+    const rota = `/api/casos/${enc(id)}/ingestao`;
+    return new Promise((resolve, reject) => {
+      const x = new XMLHttpRequest();
+      x.open('POST', rota);
+      for (const [k, v] of Object.entries(this.headers())) x.setRequestHeader(k, v);
+      x.setRequestHeader('Content-Type', 'application/octet-stream');
+      x.setRequestHeader('X-Perito-Arquivo', enc(f.name));
+      if (opts.fonte && opts.fonte !== 'auto') x.setRequestHeader('X-Perito-Fonte', opts.fonte);
+      if (opts.obs) x.setRequestHeader('X-Perito-Obs', enc(opts.obs));
+      x.upload.onprogress = (e) => progresso?.(e.loaded, e.lengthComputable ? e.total : f.size);
+      x.onerror = () => reject(new ApiError(0, 'falha de rede', rota, 'conexão interrompida durante o envio'));
+      x.onload = () => {
+        let body: unknown = null;
+        try {
+          body = x.responseText ? JSON.parse(x.responseText) : null;
+        } catch {
+          /* corpo não-JSON */
+        }
+        if (x.status >= 200 && x.status < 300) resolve(body as IngestaoResult);
+        else {
+          const b = (body ?? {}) as { erro?: string; detalhe?: string };
+          reject(new ApiError(x.status, b.erro ?? `HTTP ${x.status}`, rota, b.detalhe ?? x.responseText.slice(0, 200)));
+        }
+      };
+      x.send(f);
+    });
   }
   casos() {
     return this.get<CasoItem[]>('/casos');
@@ -108,7 +270,7 @@ class RealApi implements PeritoApi {
     return this.get<Entidades>(`/casos/${enc(id)}/entidades`);
   }
   iocs(id: string) {
-    return this.get<IocsResp>(`/casos/${enc(id)}/iocs`);
+    return this.getV<IocsResp>(`/casos/${enc(id)}/iocs`, id, 'iocs.csv');
   }
   docs(id: string) {
     return this.get<DocItem[]>(`/casos/${enc(id)}/docs`);
@@ -116,13 +278,13 @@ class RealApi implements PeritoApi {
   doc(id: string, nome: string) {
     // revisoes/x.md e relatorios/x.md mantêm a barra (rota /doc/revisoes/x.md)
     const n = nome.split('/').map(enc).join('/');
-    return this.get<DocConteudo>(`/casos/${enc(id)}/doc/${n}`);
+    return this.getV<DocConteudo>(`/casos/${enc(id)}/doc/${n}`, id, nome.includes('/') ? nome : `${nome}.md`);
   }
   hipoteses(id: string) {
-    return this.get<Hipotese[]>(`/casos/${enc(id)}/hipoteses`);
+    return this.getV<Hipotese[]>(`/casos/${enc(id)}/hipoteses`, id, 'hipoteses.md');
   }
   achados(id: string) {
-    return this.get<Achado[]>(`/casos/${enc(id)}/achados`);
+    return this.getV<Achado[]>(`/casos/${enc(id)}/achados`, id, 'achados.md');
   }
 }
 
@@ -234,6 +396,36 @@ class FixturesApi implements PeritoApi {
   achados(id: string) {
     return this.file<Achado[]>(`${enc(id)}/achados.json`);
   }
+  grafo(id: string) {
+    return this.file<Grafo>(`${enc(id)}/grafo.json`);
+  }
+  async formatos(): Promise<Formato[]> {
+    return [{ fonte: 'auto', descricao: 'Detecção automática da fonte' }];
+  }
+  criarAchado(): Promise<EscritaOk> {
+    return Promise.reject(this.erroRO());
+  }
+  criarHipotese(): Promise<EscritaOk> {
+    return Promise.reject(this.erroRO());
+  }
+  patchHipotese(): Promise<EscritaOk> {
+    return Promise.reject(this.erroRO());
+  }
+  criarIoc(): Promise<EscritaOk> {
+    return Promise.reject(this.erroRO());
+  }
+  patchIoc(): Promise<EscritaOk> {
+    return Promise.reject(this.erroRO());
+  }
+  criarLimitacao(): Promise<EscritaOk> {
+    return Promise.reject(this.erroRO());
+  }
+  ingerir(): Promise<IngestaoResult> {
+    return Promise.reject(this.erroRO());
+  }
+  private erroRO(): ApiError {
+    return new ApiError(0, 'modo fixtures é somente leitura', 'fixtures', 'rode com a API real (perito ui) para gravar');
+  }
 }
 
 /**
@@ -258,6 +450,7 @@ export const api: PeritoApi = import.meta.env.VITE_FIXTURES === '1' ? new Fixtur
 
 /** Mensagem curta de erro para a linha de status / estado inline. */
 export function describeError(e: unknown): string {
+  if (e instanceof ConflitoError) return `E-409 conflito em ${e.arquivo}`;
   if (e instanceof ApiError) {
     const st = e.status ? `E-${e.status}` : 'E-REDE';
     return `${st} ${e.rota} ${e.message}${e.detalhe ? ` — ${e.detalhe}` : ''}`;

@@ -229,6 +229,9 @@ export interface Hipotese {
   confirmaria: string | null;
   refutaria: string | null;
   proximo_passo: string | null;
+  /** spec 06: refs que contradizem e justificativa de confirmação/refutação */
+  contradiz?: string | null;
+  justificativa?: string | null;
   refs: string[];
   linha: number;
 }
@@ -254,6 +257,7 @@ export interface ApiErroBody {
 // ---------- visões / rotas ----------
 export type Visao =
   | 'visao'
+  | 'mapa'
   | 'timeline'
   | 'entidades'
   | 'attack'

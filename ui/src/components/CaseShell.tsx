@@ -24,6 +24,16 @@ import { Entities } from '../views/entities/Entities';
 import { HypAch } from '../views/hyp/HypAch';
 import { Ioc } from '../views/ioc/Ioc';
 import { ErrorBoundary } from './ErrorBoundary';
+import { Ingest, type IngestHandle } from './Ingest';
+import { AttackMap } from '../views/map/AttackMap';
+import { ConfContext } from '../lib/conf';
+import { indexaConfirmadas } from '../lib/bancada';
+import { expandRefs } from '../lib/refs';
+import { useLoad } from '../lib/useLoad';
+import type { MsgAcao } from '../lib/msg';
+import type { GrafoNo } from '../lib/graph';
+import type { EKind } from '../lib/entities';
+import type { Hipotese } from '../lib/types';
 import type { ViewHandle } from '../lib/view';
 import { resolveRefs } from '../lib/refs';
 import type { Achado, PeritoEvent } from '../lib/types';
@@ -49,6 +59,8 @@ interface Msg {
   text: string;
   kind: MsgKind;
   n: number;
+  /** Ações por tecla oferecidas na própria mensagem (ex.: [o] abrir no F6). */
+  acoes: MsgAcao[];
 }
 
 const isTyping = (t: EventTarget | null) =>
@@ -67,7 +79,14 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
   const [evErr, setEvErr] = useState<string | null>(null);
   const [hist, setHist] = useState<Histograma | null>(null);
 
-  const [msg, setMsg] = useState<Msg>({ text: '', kind: 'info', n: 0 });
+  const [msg, setMsg] = useState<Msg>({ text: '', kind: 'info', n: 0, acoes: [] });
+  /** Revisão dos dados: sobe a cada escrita/ingestão; as visões recarregam com ela. */
+  const [rev, setRev] = useState(0);
+  const [reloadN, setReloadN] = useState(0);
+  const [mapaFoco, setMapaFoco] = useState<number | null>(null);
+  const [entFoco, setEntFoco] = useState<{ kind: EKind; valor: string } | null>(null);
+  const [veioDoMapa, setVeioDoMapa] = useState(false);
+  const ingestRef = useRef<IngestHandle>(null);
   const [help, setHelp] = useState(false);
   const [dens, setDens] = useState<Densidade>(loadDensidade);
   const [tema, setTema] = useState(loadTema);
@@ -80,7 +99,16 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
   activeRef.current = active;
   const cmdRef = useRef<CommandLineHandle>(null);
 
-  const say = useCallback((text: string, kind: MsgKind = 'info') => setMsg((m) => ({ text, kind, n: m.n + 1 })), []);
+  const say = useCallback(
+    (text: string, kind: MsgKind = 'info', acoes: MsgAcao[] = []) => setMsg((m) => ({ text, kind, n: m.n + 1, acoes })),
+    [],
+  );
+  const acoesRef = useRef<MsgAcao[]>([]);
+  acoesRef.current = msg.acoes;
+
+  // Técnicas confirmadas (citadas em achados.md) para o app inteiro.
+  const achadosAll = useLoad(() => api.achados(caso), [caso, rev]);
+  const confirmadas = useMemo(() => indexaConfirmadas(achadosAll?.ok ? achadosAll.v : [], expandRefs), [achadosAll]);
 
   // ---------- dados de base ----------
   useEffect(() => {
@@ -100,7 +128,7 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
     return () => {
       vivo = false;
     };
-  }, [caso, say]);
+  }, [caso, say, reloadN]);
 
   // ---------- eventos + histograma a cada mudança de filtro ----------
   const seq = useRef(0);
@@ -159,7 +187,7 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
       .then((h) => my === seq.current && setHist(h))
       .catch((e: unknown) => my === seq.current && say(`ERRO histograma: ${describeError(e)}`, 'err'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [caso, filter, local ? tecnicasKey : '', local && !!resumo]);
+  }, [caso, filter, local ? tecnicasKey : '', local && !!resumo, reloadN]);
 
   // ---------- filtros com desfazer ----------
   const filterRef = useRef(filter);
@@ -268,6 +296,9 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
         case 'ajuda':
           setHelp(true);
           break;
+        case 'mapa':
+          navigate(caso, 'mapa');
+          break;
       }
       return true;
     },
@@ -287,12 +318,16 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
   respRef.current = resp;
   const pendingFocus = useRef<{ idxs: number[]; rotulo: string } | null>(null);
 
+  const depoisDoFoco = useRef<(() => void) | null>(null);
   const focusLater = useCallback(
     (idxs: number[], rotulo: string) => {
       window.setTimeout(() => {
         const n = tlRef.current?.focusEvents(idxs, rotulo) ?? 0;
         if (n) say(`${rotulo}: ${n} evento(s) destacado(s) · n/N percorre · Esc limpa`, 'ok');
         else say(`${rotulo}: eventos fora do filtro atual`, 'err');
+        const depois = depoisDoFoco.current;
+        depoisDoFoco.current = null;
+        if (n && depois) window.setTimeout(depois, 30);
       }, 60);
     },
     [say],
@@ -331,6 +366,64 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
     },
     [ensureAll, openEvents, say],
   );
+
+  // ---------- escritas / ingestão: recarrega tudo ----------
+  const recarregar = useCallback(() => {
+    allRef.current = null;
+    setReloadN((n) => n + 1);
+    setRev((r) => r + 1);
+  }, []);
+
+  const abrirF6: MsgAcao = useMemo(() => ({ tecla: 'o', rotulo: 'abrir no F6', fazer: () => navigate(caso, 'hipoteses') }), [caso]);
+
+  const onEscrito = useCallback(
+    (m: string, acoes?: MsgAcao[]) => {
+      say(m, 'ok', acoes ?? [abrirF6]);
+      recarregar();
+    },
+    [say, recarregar, abrirF6],
+  );
+
+  /** F6 [a] gerar achado: abre a F1 no 1º evento que sustenta a hipótese, com a bancada aberta. */
+  const gerarAchado = useCallback(
+    (h: Hipotese, achados: Achado[]) => {
+      const texto = [h.sustentacao ?? '', ...h.refs].join(' ; ');
+      ensureAll()
+        .then((evs) => {
+          const idxs = resolveRefs(texto, evs, achados);
+          if (!idxs.length) {
+            say(`${h.id}: nenhum evento da sustentação foi encontrado para gerar o achado`, 'err');
+            return;
+          }
+          depoisDoFoco.current = () => tlRef.current?.abrirBancada('achado', h.titulo);
+          openEvents(idxs.slice(0, 1), h.id);
+        })
+        .catch((e: unknown) => say(`ERRO ${describeError(e)}`, 'err'));
+    },
+    [ensureAll, openEvents, say],
+  );
+
+  /** MAPA: 2º clique/Enter num nó pivota na F2 (com [Backspace] ◀ MAPA). */
+  const pivotNo = useCallback(
+    (no: GrafoNo) => {
+      const kind: EKind | null = no.tipo === 'host' ? 'host' : no.tipo === 'conta' ? 'user' : no.tipo === 'ip' ? 'ip' : no.tipo === 'dominio' ? 'domain' : null;
+      if (!kind) {
+        onPivot('texto', no.rotulo, 'MAPA');
+        navigate(caso, 'timeline');
+        return;
+      }
+      setEntFoco({ kind, valor: no.rotulo });
+      setVeioDoMapa(true);
+      navigate(caso, 'entidades');
+      say(`pivô ${no.rotulo} na F2 · [Backspace] ◀ MAPA`, 'info');
+    },
+    [caso, onPivot, say],
+  );
+
+  useEffect(() => {
+    if (visao !== 'entidades' && visao !== 'mapa') setVeioDoMapa(false);
+    if (visao !== 'mapa') setMapaFoco(null);
+  }, [visao]);
 
   const pivotAndGo = useCallback(
     (field: FilterField, value: string, via: string) => {
@@ -406,9 +499,29 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
           if (v) navigate(caso, v);
           return;
         }
+        if (e.key === 'm') {
+          e.preventDefault();
+          navigate(caso, 'mapa');
+          return;
+        }
       } else if (e.key === 'g') {
         e.preventDefault();
         gPending.current = window.setTimeout(clearG, 1200);
+        return;
+      }
+
+      // Ações oferecidas pela última mensagem (ex.: [o] abrir no F6, [a] gerar achado).
+      const acao = acoesRef.current.find((a) => a.tecla === e.key);
+      if (acao && !e.shiftKey) {
+        e.preventDefault();
+        acoesRef.current = [];
+        setMsg((m) => ({ ...m, acoes: [] }));
+        acao.fazer();
+        return;
+      }
+      if (e.key === 'i' && (s.visao === 'visao' || s.visao === 'cobertura')) {
+        e.preventDefault();
+        ingestRef.current?.escolher();
         return;
       }
 
@@ -462,6 +575,7 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
   const suggestCtx = useMemo(() => ({ entidades, resumo }), [entidades, resumo]);
 
   return (
+    <ConfContext.Provider value={confirmadas}>
     <div className="app">
       <StatusBar
         caso={caso}
@@ -504,6 +618,8 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
             onPrompt={onPrompt}
             modo={modo}
             onOverview={() => navigate(caso, 'visao')}
+            rev={rev}
+            onEscrito={onEscrito}
           />
           </ErrorBoundary>
         </div>
@@ -523,6 +639,13 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
                 navigate(caso, 'timeline');
               }}
               onCobertura={() => navigate(caso, 'cobertura')}
+              rev={rev}
+              modo={modo}
+              onAbrirMapa={(p) => {
+                setMapaFoco(p);
+                navigate(caso, 'mapa');
+              }}
+              ingest={<Ingest ref={ingestRef} caso={caso} modo={modo} onConcluido={recarregar} onMsg={say} />}
             />
             </ErrorBoundary>
           </div>
@@ -543,29 +666,96 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
                 }}
                 onMsg={say}
                 onPrompt={onPrompt}
+                foco={entFoco}
+                onVoltar={veioDoMapa ? () => navigate(caso, 'mapa') : undefined}
               />
+            </ErrorBoundary>
+          </div>
+        )}
+        {visao === 'mapa' && (
+          <div className="view-slot">
+            <ErrorBoundary label="MAPA" chave="mapa">
+              <AttackMap
+                ref={viewRef}
+                caso={caso}
+                modo={modo}
+                rev={rev}
+                rowH={rowH}
+                resumo={resumo}
+                focoPasso={mapaFoco}
+                onOpenEdge={(idxs, rotulo) => openEvents(idxs, rotulo)}
+                onPivotNode={pivotNo}
+                onMsg={say}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
+        {visao === 'cobertura' && (
+          <div className="view-slot view-scroll">
+            <ErrorBoundary label="COBERTURA" chave="cobertura">
+              <section className="ov-sec">
+                <h2 className="lbl ov-h">F5 COBERTURA ▮ INGERIR</h2>
+                <p className="t2">
+                  a matriz fonte × tempo e fonte × host ainda está <span className="lbl amber">PENDENTE</span>; enquanto isso, ingira evidências aqui ([i] escolher
+                  arquivos).
+                </p>
+                <Ingest ref={ingestRef} caso={caso} modo={modo} onConcluido={recarregar} onMsg={say} />
+              </section>
             </ErrorBoundary>
           </div>
         )}
         {visao === 'hipoteses' && (
           <div className="view-slot view-scroll">
             <ErrorBoundary label="HIP/ACH" chave="hipoteses">
-              <HypAch ref={viewRef} caso={caso} modo={modo} onOpenRefs={openRefs} onMsg={say} onPrompt={onPrompt} />
+              <HypAch
+                ref={viewRef}
+                caso={caso}
+                modo={modo}
+                onOpenRefs={openRefs}
+                onMsg={say}
+                onPrompt={onPrompt}
+                rev={rev}
+                onEscrito={onEscrito}
+                onGerarAchado={gerarAchado}
+              />
             </ErrorBoundary>
           </div>
         )}
         {visao === 'ioc' && (
           <div className="view-slot view-scroll">
             <ErrorBoundary label="IOC" chave="ioc">
-              <Ioc ref={viewRef} caso={caso} modo={modo} onPivot={(f, v) => pivotAndGo(f, v, 'IOC')} onMsg={say} onPrompt={onPrompt} />
+              <Ioc
+                ref={viewRef}
+                caso={caso}
+                modo={modo}
+                onPivot={(f, v) => pivotAndGo(f, v, 'IOC')}
+                onMsg={say}
+                onPrompt={onPrompt}
+                rev={rev}
+                onEscrito={(m) => onEscrito(m, [])}
+              />
             </ErrorBoundary>
           </div>
         )}
-        {!['timeline', 'visao', 'entidades', 'hipoteses', 'ioc'].includes(visao) && <PendingView visao={visao} />}
+        {!['timeline', 'visao', 'entidades', 'hipoteses', 'ioc', 'mapa', 'cobertura'].includes(visao) && <PendingView visao={visao} />}
       </main>
       <footer className="bottom">
-        <div className={`msg msg-${msg.kind}`} role="status" aria-live="polite" aria-atomic="true">
+        <div className={`msg msg-${msg.kind}`} role="status" aria-live={msg.kind === 'err' ? 'off' : 'polite'} aria-atomic="true">
           {msg.text ? msg.text : <span className="t3">pronto · {api.modo === 'fixtures' ? 'modo FIXTURES' : 'API local'} · densidade {dens} ({rowH}px)</span>}
+          {msg.acoes.map((a) => (
+            <button
+              key={a.tecla}
+              type="button"
+              className="msg-acao"
+              onClick={() => {
+                setMsg((m) => ({ ...m, acoes: [] }));
+                a.fazer();
+              }}
+            >
+              {' '}
+              · [{a.tecla}] {a.rotulo}
+            </button>
+          ))}
         </div>
         <CommandLine
           ref={cmdRef}
@@ -578,6 +768,11 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
         />
       </footer>
       {help && <HelpOverlay onClose={() => setHelp(false)} />}
+      {/* erro anunciado de imediato (assertive); sucesso/info vão pela linha visível (polite) */}
+      <div className="sr-only" role="alert" aria-live="assertive" aria-atomic="true">
+        {msg.kind === 'err' ? msg.text : ''}
+      </div>
     </div>
+    </ConfContext.Provider>
   );
 }
