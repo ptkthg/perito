@@ -16,6 +16,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from .. import case as cases
 from .api import TimelineCache, dispatch
+from .jobs import JobManager
 from .writes import (audit, case_lock, confined, get_case, read_target,
                      route_lock, version, write_json, write_route)
 
@@ -40,7 +41,12 @@ class Handler(BaseHTTPRequestHandler):
     def _respond(self, status, body, content_type='application/json; charset=utf-8', *, file_version=None):
         if not isinstance(body, bytes):
             body = json.dumps(body, ensure_ascii=False).encode('utf-8')
+        drop_connection = status >= 400 and not self._drain_unread_body()
         self.send_response(status)
+        if drop_connection:
+            # Corpo não consumido: fechar evita que o cliente leia lixo e explicita o fim da conexão.
+            self.close_connection = True
+            self.send_header('Connection', 'close')
         self.send_header('Content-Type', content_type)
         self.send_header('Content-Length', str(len(body)))
         self.send_header('Cache-Control', 'no-store')
@@ -49,6 +55,34 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         if self.command != 'HEAD':
             self.wfile.write(body)
+
+    def _drain_unread_body(self, limit=1024**2):
+        """Consome o corpo ainda não lido de uma requisição rejeitada.
+
+        No Windows, responder e fechar o socket com dados pendentes no buffer de recepção
+        gera RST, e o cliente vê ConnectionAborted/Reset em vez do 4xx. Devolve True se não
+        há corpo pendente (ou se ele foi descartado) e False se a conexão precisa ser fechada.
+        """
+        if getattr(self, '_body_consumed', True) or self.command in ('GET', 'HEAD'):
+            return True
+        self._body_consumed = True
+        lengths = self.headers.get_all('Content-Length', []) if self.headers else []
+        if self.headers and self.headers.get_all('Transfer-Encoding', []):
+            return False
+        if len(lengths) != 1 or not re.fullmatch(r'[0-9]+', lengths[0]):
+            return not lengths
+        remaining = int(lengths[0])
+        if remaining > limit:
+            return False
+        try:
+            while remaining > 0:
+                chunk = self.rfile.read(min(remaining, 64 * 1024))
+                if not chunk:
+                    return False
+                remaining -= len(chunk)
+        except OSError:
+            return False
+        return True
 
     def send_error(self, code, message=None, explain=None):
         self._respond(code, {'erro': 'Requisição HTTP inválida.', 'detalhe': message or str(code)})
@@ -63,6 +97,7 @@ class Handler(BaseHTTPRequestHandler):
         self._handle()
 
     def _handle(self):
+        self._body_consumed = False
         hosts = self.headers.get_all('Host', [])
         allowed = {f'127.0.0.1:{self.server.server_port}', f'localhost:{self.server.server_port}'}
         if len(hosts) != 1 or hosts[0] not in allowed:
@@ -76,6 +111,26 @@ class Handler(BaseHTTPRequestHandler):
                 tokens = self.headers.get_all('X-Perito-Token', [])
                 if len(tokens) != 1 or not secrets.compare_digest(tokens[0].encode('utf-8'), self.server.token.encode('utf-8')):
                     self._respond(403, {'erro': 'token inválido'})
+                    return
+                if self.server.jobs.handles(path):
+                    data = None
+                    if self.command == 'POST':
+                        # O aceite é verificado antes de ler/iniciar qualquer tarefa.
+                        if path.startswith('/api/casos/') and self.headers.get_all('X-Perito-Aviso-Envio', []) != ['aceito']:
+                            self._respond(428, {'erro': 'Aceite o aviso de envio ao provedor.'})
+                            return
+                        length = self._body_length('application/json', 1024**2)
+                        if length is None:
+                            return
+                        self._body_consumed = True
+                        payload = self.rfile.read(length)
+                        if len(payload) != length:
+                            raise ValueError('Corpo incompleto.')
+                        data = json.loads(payload)
+                    status, body = self.server.jobs.dispatch(
+                        self.command, path, parse_qs(url.query), data,
+                        accepted=self.headers.get_all('X-Perito-Aviso-Envio', []) == ['aceito'])
+                    self._respond(status, body)
                     return
                 if self.command == 'GET':
                     # Mantém conteúdo e versão no mesmo snapshot das escritas da UI.
@@ -98,6 +153,7 @@ class Handler(BaseHTTPRequestHandler):
                 length = self._body_length('application/json', 1024**2)
                 if length is None:
                     return
+                self._body_consumed = True
                 payload = self.rfile.read(length)
                 if len(payload) != length:
                     raise ValueError('Corpo incompleto.')
@@ -157,6 +213,7 @@ class Handler(BaseHTTPRequestHandler):
             before = version(case.custody_file)
             try:
                 with temporary.open('xb') as fh:
+                    self._body_consumed = True
                     remaining = length
                     while remaining:
                         chunk = self.rfile.read(min(remaining, 1024**2))
@@ -208,6 +265,7 @@ def create_server(case_base: Path = cases.CASES_DIR, *, port: int = 8765,
     server.token = token if token is not None else os.environ.get('PERITO_UI_TOKEN') or secrets.token_urlsafe(24)
     server.cache = TimelineCache()
     server.api_lock = RLock()
+    server.jobs = JobManager(server.case_base)
     return server
 
 
@@ -231,5 +289,6 @@ def run(*, case_base: Path, port: int = 8765, case_id: str | None = None,
     except KeyboardInterrupt:
         pass
     finally:
+        server.jobs.close()
         server.server_close()
     return 0
