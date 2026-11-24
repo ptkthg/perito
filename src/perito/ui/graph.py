@@ -60,10 +60,15 @@ def _label(edge, events):
         return label + (f' ({attachment})' if attachment else '')
     if kind == 'rede_externa':
         size = edge['bytes_out']
-        if size:
+        n = edge['contagem']
+        conexoes = f'{n} conexão' if n == 1 else f'{n} conexões'
+        if size >= 10**6:
             unit, divisor = ('GB', 10**9) if size >= 10**9 else ('MB', 10**6)
             return f'enviou {size / divisor:.1f} {unit}'.replace('.', ',')
-        return 'conexão externa'
+        if size:
+            # Volume pequeno: o que importa para o leitor é que houve contato, não os bytes.
+            return f'{conexoes} · {max(1, round(size / 1000))} KB enviados'
+        return conexoes
     if kind == 'signin':
         denied = sum(str(events[i].extra.get('error_code')) == '500121'
                      and events[i].outcome == 'failure' for i in edge['idxs'])

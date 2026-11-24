@@ -145,3 +145,18 @@ export function isoMs(ms: number): string {
 export function pad2(n: number): string {
   return String(n).padStart(2, '0');
 }
+
+/** Bytes legíveis em base 1024 com vírgula decimal: 2576980378 → "2,4 GB". */
+export function formatBytes(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n) || n < 0) return '—';
+  if (n < 1024) return `${n} B`;
+  const units = ['KB', 'MB', 'GB', 'TB', 'PB'];
+  let v = n / 1024;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  const s = v >= 100 ? v.toFixed(0) : v.toFixed(1);
+  return `${s.replace('.', ',').replace(/,0$/, '')} ${units[i]}`;
+}

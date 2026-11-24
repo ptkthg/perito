@@ -17,8 +17,11 @@ export function useCharWidth(): number {
     };
     measure();
     document.fonts?.ready.then(measure).catch(() => undefined);
+    // A fonte de dados escala com a largura da janela (clamp em tokens.css).
+    window.addEventListener('resize', measure);
     return () => {
       vivo = false;
+      window.removeEventListener('resize', measure);
     };
   }, []);
   return w;
@@ -44,4 +47,28 @@ export function useElementSize<T extends HTMLElement>(): [(el: T | null) => void
   }, [el]);
   const ref = useCallback((node: T | null) => setEl(node), []);
   return [ref, size];
+}
+
+/**
+ * Altura de linha efetiva (px inteiro) = densidade (18/20/24) × tamanho atual da fonte de dados / 13.
+ * Escreve --row-h no <html> e devolve o valor para o virtualizador (altura fixa e exata).
+ */
+export function useEffectiveRowHeight(densidade: number): number {
+  const calc = () => {
+    const fs = Number.parseFloat(getComputedStyle(document.body).fontSize) || 13;
+    return Math.max(densidade, Math.round((densidade * fs) / 13));
+  };
+  const [h, setH] = useState(calc);
+  useLayoutEffect(() => {
+    const apply = () => {
+      const v = calc();
+      document.documentElement.style.setProperty('--row-h', `${v}px`);
+      setH(v);
+    };
+    apply();
+    window.addEventListener('resize', apply);
+    return () => window.removeEventListener('resize', apply);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [densidade]);
+  return h;
 }

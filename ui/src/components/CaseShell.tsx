@@ -24,6 +24,7 @@ import { parseCommand } from '../lib/commands';
 import { navigate, visaoPorTecla } from '../lib/route';
 import { DENSIDADES, type Densidade, loadDensidade, loadTema, saveDensidade, saveTema } from '../lib/prefs';
 import { StatusBar } from './StatusBar';
+import { useEffectiveRowHeight } from '../lib/hooks';
 import { Tabs } from './Tabs';
 import { CommandLine, type CommandLineHandle, type PromptMode } from './CommandLine';
 import { HelpOverlay } from './HelpOverlay';
@@ -269,10 +270,8 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
   const onPrompt = useCallback((prefill: string, mode: PromptMode) => cmdRef.current?.focus(prefill, mode), []);
 
   // ---------- densidade e tema ----------
-  useEffect(() => {
-    document.documentElement.style.setProperty('--row-h', `${dens}px`);
-    saveDensidade(dens);
-  }, [dens]);
+  const rowH = useEffectiveRowHeight(dens);
+  useEffect(() => saveDensidade(dens), [dens]);
 
   useEffect(() => {
     const claro = tema === 'claro' || visao === 'relatorios';
@@ -421,7 +420,7 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
             hist={hist}
             resumo={resumo}
             filter={filter}
-            rowH={dens}
+            rowH={rowH}
             onPivot={onPivot}
             onClause={onClause}
             onRemoveClause={onRemoveClause}
@@ -455,7 +454,7 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
       </main>
       <footer className="bottom">
         <div className={`msg msg-${msg.kind}`} role="status" aria-live="polite" aria-atomic="true">
-          {msg.text ? msg.text : <span className="t3">pronto · {api.modo === 'fixtures' ? 'modo FIXTURES' : 'API local'} · densidade {dens}px</span>}
+          {msg.text ? msg.text : <span className="t3">pronto · {api.modo === 'fixtures' ? 'modo FIXTURES' : 'API local'} · densidade {dens} ({rowH}px)</span>}
         </div>
         <CommandLine
           ref={cmdRef}

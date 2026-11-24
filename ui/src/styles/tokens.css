@@ -38,16 +38,18 @@
   /* tipografia */
   --font-data: 'Iosevka', 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
   --font-label: 'IBM Plex Sans Condensed', 'Iosevka', 'Arial Narrow', sans-serif-condensed, sans-serif;
-  --fs-data: 13px;
-  --fs-label: 11px;
-  --fs-status: 12px;
-  --fs-id: 14px;
+  /* Escala responsiva: 13px até 1400px de viewport, sobe linear até 15px em ≥1900px.
+     Os demais tamanhos acompanham na mesma proporção (×15/13 no topo). Nada abaixo de 11px. */
+  --fs-data: clamp(13px, calc(13px + (100vw - 1400px) * 0.004), 15px);
+  --fs-label: clamp(11px, calc(11px + (100vw - 1400px) * 0.00338), 12.7px);
+  --fs-status: clamp(12px, calc(12px + (100vw - 1400px) * 0.00369), 13.85px);
+  --fs-id: clamp(14px, calc(14px + (100vw - 1400px) * 0.00431), 16.15px);
   --track-label: 0.08em;
 
   /* grade */
   --u: 4px;
   --cell-pad: 0 8px;
-  --row-h: 20px; /* 18 | 20 | 24 — Ctrl+= / Ctrl+- */
+  --row-h: 20px; /* 18 | 20 | 24 × (fs-data/13), em px inteiros; definido em JS (useEffectiveRowHeight) */
   --line: 1px solid var(--grid);
   --line-strong: 1px solid var(--grid-strong);
   --double: 3px double var(--grid-strong);
