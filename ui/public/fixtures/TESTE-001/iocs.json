@@ -1,0 +1,158 @@
+{
+ "candidatos": [
+  {
+   "tipo": "arquivo",
+   "valor": "C:\\ProgramData\\rc\\rclone.exe",
+   "primeira_vez_utc": "2026-11-10T13:57:40.000Z",
+   "ultima_vez_utc": "2026-11-10T13:57:41.000Z",
+   "fonte": "sentinel;splunk;wazuh",
+   "contexto": "rclone.exe iniciado por cmd.exe",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "arquivo",
+   "valor": "C:\\Users\\Public\\d.bin",
+   "primeira_vez_utc": "2026-11-10T13:15:34.000Z",
+   "ultima_vez_utc": "2026-11-10T13:15:34.000Z",
+   "fonte": "defender",
+   "contexto": "Arquivo FileCreated: C:\\Users\\Public\\d.bin (por rundll32.exe)",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "arquivo",
+   "valor": "C:\\Users\\m.silva\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\Q2X8LM1Z\\Fatura_88213.xlsm",
+   "primeira_vez_utc": "2026-11-10T13:07:45.512Z",
+   "ultima_vez_utc": "2026-11-10T13:07:45.512Z",
+   "fonte": "defender",
+   "contexto": "Arquivo FileCreated: C:\\Users\\m.silva\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\Q2X8LM1Z\\Fatura_88213.xl",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "arquivo",
+   "valor": "C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe",
+   "primeira_vez_utc": "2026-11-10T13:08:40.300Z",
+   "ultima_vez_utc": "2026-11-10T13:12:30.000Z",
+   "fonte": "defender",
+   "contexto": "Arquivo FileCreated: C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe (por powershell.exe)",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "dominio",
+   "valor": "bkp.example-storage.net",
+   "primeira_vez_utc": "2026-11-10T13:57:42.800Z",
+   "ultima_vez_utc": "2026-11-10T13:57:43.004Z",
+   "fonte": "elastic;splunk",
+   "contexto": "Consulta DNS: 10.10.30.5 → bkp.example-storage.net",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "dominio",
+   "valor": "cdn-update.example-cdn.net",
+   "primeira_vez_utc": "2026-11-10T13:08:20.441Z",
+   "ultima_vez_utc": "2026-11-10T13:52:11.020Z",
+   "fonte": "defender;elastic",
+   "contexto": "Consulta DNS: 10.10.20.23 → cdn-update.example-cdn.net",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "email",
+   "valor": "faturas@pagamentos-fornecedor.example",
+   "primeira_vez_utc": "2026-11-10T13:02:11.341Z",
+   "ultima_vez_utc": "2026-11-10T13:02:11.341Z",
+   "fonte": "defender",
+   "contexto": "E-mail de faturas@pagamentos-fornecedor.example para m.silva@acme.com.br: Fatura pendente NF 88213",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "ip",
+   "valor": "192.0.2.10",
+   "primeira_vez_utc": "2026-11-10T10:00:00.000Z",
+   "ultima_vez_utc": "2026-11-10T12:10:00.000Z",
+   "fonte": "entra_audit;entra_signin",
+   "contexto": "Update user por admin.ti → j.souza@acme.com.br",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "ip",
+   "valor": "192.0.2.200",
+   "primeira_vez_utc": "2026-11-10T13:06:09.120Z",
+   "ultima_vez_utc": "2026-11-10T13:30:00.000Z",
+   "fonte": "defender;elastic;splunk",
+   "contexto": "Consulta DNS: 10.10.20.23 → www.office.com",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "ip",
+   "valor": "198.51.100.200",
+   "primeira_vez_utc": "2026-11-10T13:57:42.800Z",
+   "ultima_vez_utc": "2026-11-10T14:31:10.000Z",
+   "fonte": "elastic;splunk",
+   "contexto": "Consulta DNS: 10.10.30.5 → bkp.example-storage.net",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "ip",
+   "valor": "198.51.100.77",
+   "primeira_vez_utc": "2026-11-10T13:22:10.000Z",
+   "ultima_vez_utc": "2026-11-10T13:30:44.000Z",
+   "fonte": "entra_audit;entra_signin",
+   "contexto": "Sign-in FALHOU (500121) de m.silva em OfficeHome a partir de 198.51.100.77 (Amsterdam/NL)",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "ip",
+   "valor": "203.0.113.45",
+   "primeira_vez_utc": "2026-11-10T13:08:20.441Z",
+   "ultima_vez_utc": "2026-11-10T13:52:12.900Z",
+   "fonte": "defender;elastic;splunk",
+   "contexto": "Consulta DNS: 10.10.20.23 → cdn-update.example-cdn.net",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "ip",
+   "valor": "203.0.113.80",
+   "primeira_vez_utc": "2026-11-10T13:02:11.341Z",
+   "ultima_vez_utc": "2026-11-10T13:02:11.341Z",
+   "fonte": "defender",
+   "contexto": "E-mail de faturas@pagamentos-fornecedor.example para m.silva@acme.com.br: Fatura pendente NF 88213",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "sha256",
+   "valor": "1c2df732a1c819a38f653f85ff1e59fd7a7ea6588297822adf856d6308f45cc3",
+   "primeira_vez_utc": "2026-11-10T13:02:11.341Z",
+   "ultima_vez_utc": "2026-11-10T13:07:45.512Z",
+   "fonte": "defender",
+   "contexto": "E-mail de faturas@pagamentos-fornecedor.example para m.silva@acme.com.br: Fatura pendente NF 88213",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "sha256",
+   "valor": "45ed71c9d81d104a33a15541d8ad8188bc2fad4c87982a05e6275462355f2622",
+   "primeira_vez_utc": "2026-11-10T13:08:40.300Z",
+   "ultima_vez_utc": "2026-11-10T13:12:30.000Z",
+   "fonte": "defender",
+   "contexto": "Arquivo FileCreated: C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe (por powershell.exe)",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "sha256",
+   "valor": "83a787c29da3c7350d88d4e838fe73e8a765cce8f259fca2ff4199c7e3b4a946",
+   "primeira_vez_utc": "2026-11-10T13:15:34.000Z",
+   "ultima_vez_utc": "2026-11-10T13:15:34.000Z",
+   "fonte": "defender",
+   "contexto": "Arquivo FileCreated: C:\\Users\\Public\\d.bin (por rundll32.exe)",
+   "confianca": "candidato"
+  },
+  {
+   "tipo": "sha256",
+   "valor": "cc3f602c02b85a1d8e589ed90c51aa587adf921816b27164a996daaf09607712",
+   "primeira_vez_utc": "2026-11-10T13:57:40.120Z",
+   "ultima_vez_utc": "2026-11-10T13:57:40.120Z",
+   "fonte": "splunk",
+   "contexto": "rclone.exe iniciado por cmd.exe",
+   "confianca": "candidato"
+  }
+ ],
+ "registrados": []
+}

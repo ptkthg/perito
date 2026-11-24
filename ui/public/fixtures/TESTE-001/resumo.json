@@ -1,0 +1,172 @@
+{
+ "id": "TESTE-001",
+ "titulo": "Caso sintético: phishing Financeiro",
+ "fase": "Detectar / Identification",
+ "total_eventos": 50,
+ "janela": {
+  "primeiro": "2026-11-10T10:00:00.000Z",
+  "ultimo": "2026-11-10T14:31:10.000Z"
+ },
+ "por_fonte": {
+  "entra_audit": {
+   "eventos": 3,
+   "primeiro": "2026-11-10T10:00:00.000Z",
+   "ultimo": "2026-11-10T13:30:44.000Z"
+  },
+  "defender": {
+   "eventos": 18,
+   "primeiro": "2026-11-10T11:30:00.000Z",
+   "ultimo": "2026-11-10T13:39:58.000Z"
+  },
+  "entra_signin": {
+   "eventos": 7,
+   "primeiro": "2026-11-10T11:31:02.000Z",
+   "ultimo": "2026-11-10T13:28:00.000Z"
+  },
+  "elastic": {
+   "eventos": 4,
+   "primeiro": "2026-11-10T13:06:09.120Z",
+   "ultimo": "2026-11-10T13:57:42.800Z"
+  },
+  "splunk": {
+   "eventos": 7,
+   "primeiro": "2026-11-10T13:08:21.300Z",
+   "ultimo": "2026-11-10T14:31:10.000Z"
+  },
+  "sentinel": {
+   "eventos": 7,
+   "primeiro": "2026-11-10T13:30:00.000Z",
+   "ultimo": "2026-11-10T14:31:05.000Z"
+  },
+  "wazuh": {
+   "eventos": 4,
+   "primeiro": "2026-11-10T13:30:00.210Z",
+   "ultimo": "2026-11-10T14:31:05.400Z"
+  }
+ },
+ "por_tipo": {
+  "audit": 5,
+  "logon": 7,
+  "signin": 7,
+  "email": 1,
+  "process": 12,
+  "dns": 4,
+  "network": 9,
+  "file": 3,
+  "scheduled_task": 1,
+  "other": 1
+ },
+ "tecnicas": [
+  {
+   "id": "T1003.001",
+   "nome": "LSASS Memory",
+   "tatica": "Acesso a credenciais",
+   "eventos": 2
+  },
+  {
+   "id": "T1528",
+   "nome": "Steal Application Access Token",
+   "tatica": "Acesso a credenciais",
+   "eventos": 1
+  },
+  {
+   "id": "T1621",
+   "nome": "Multi-Factor Authentication Request Generation",
+   "tatica": "Acesso a credenciais",
+   "eventos": 3
+  },
+  {
+   "id": "T1078.004",
+   "nome": "Cloud Accounts",
+   "tatica": "Acesso inicial",
+   "eventos": 2
+  },
+  {
+   "id": "T1566.001",
+   "nome": "Spearphishing Attachment",
+   "tatica": "Acesso inicial",
+   "eventos": 1
+  },
+  {
+   "id": "T1071.001",
+   "nome": "Web Protocols",
+   "tatica": "Comando e controle",
+   "eventos": 1
+  },
+  {
+   "id": "T1105",
+   "nome": "Ingress Tool Transfer",
+   "tatica": "Comando e controle",
+   "eventos": 2
+  },
+  {
+   "id": "T1027",
+   "nome": "Obfuscated Files or Information",
+   "tatica": "Evasão de defesa",
+   "eventos": 1
+  },
+  {
+   "id": "T1070.001",
+   "nome": "Clear Windows Event Logs",
+   "tatica": "Evasão de defesa",
+   "eventos": 2
+  },
+  {
+   "id": "T1059.001",
+   "nome": "PowerShell",
+   "tatica": "Execução",
+   "eventos": 2
+  },
+  {
+   "id": "T1059.003",
+   "nome": "Windows Command Shell",
+   "tatica": "Execução",
+   "eventos": 1
+  },
+  {
+   "id": "T1204.002",
+   "nome": "Malicious File",
+   "tatica": "Execução",
+   "eventos": 1
+  },
+  {
+   "id": "T1567.002",
+   "nome": "Exfiltration to Cloud Storage",
+   "tatica": "Exfiltração",
+   "eventos": 4
+  },
+  {
+   "id": "T1021.001",
+   "nome": "Remote Desktop Protocol",
+   "tatica": "Movimentação lateral",
+   "eventos": 5
+  },
+  {
+   "id": "T1053.005",
+   "nome": "Scheduled Task",
+   "tatica": "Persistência",
+   "eventos": 2
+  },
+  {
+   "id": "T1098.005",
+   "nome": "Device Registration",
+   "tatica": "Persistência",
+   "eventos": 1
+  }
+ ],
+ "hosts_sem_edr": [
+  "srv-file-01",
+  "ws-fin-041"
+ ],
+ "custodia": {
+  "integra": true,
+  "arquivos": 7,
+  "problemas": []
+ },
+ "contagens": {
+  "hipoteses": 3,
+  "achados": 14,
+  "limitacoes": 3,
+  "iocs_registrados": 0
+ }
+}

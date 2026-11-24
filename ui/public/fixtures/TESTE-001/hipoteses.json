@@ -1,0 +1,49 @@
+[
+ {
+  "status": "confirmada",
+  "confianca": "alta",
+  "fase": "Acesso inicial (T1566.001)",
+  "sustentacao": "[EVIDÊNCIA] A1 (e-mail entregue 13:02), A2 (excel → powershell 13:08, poucos segundos depois da abertura do anexo em 13:07:45/13:08:02, defender_advanced_hunting.csv:7-9).",
+  "confirmaria": "já confirmado pela cadeia outlook → excel → powershell.",
+  "refutaria": "atividade maliciosa anterior a 13:02 em ws-fin-023.",
+  "proximo_passo": null,
+  "id": "H1",
+  "titulo": "Vetor de entrada é phishing com anexo de macro",
+  "linha": 3,
+  "refs": [
+   "A1",
+   "A2",
+   "defender_advanced_hunting.csv:7-9"
+  ]
+ },
+ {
+  "status": "confirmada",
+  "confianca": null,
+  "fase": null,
+  "sustentacao": "[EVIDÊNCIA] svc_backup fez logon RemoteInteractive em ws-fin-023 às 11:55 (defender_advanced_hunting.csv:3); dump do LSASS às 13:15 (A6); a credencial foi usada às 13:40 (A10). Portanto a credencial saiu do dump.",
+  "confirmaria": null,
+  "refutaria": null,
+  "proximo_passo": null,
+  "id": "H2",
+  "titulo": "Credencial de svc_backup obtida do dump do LSASS",
+  "linha": 11,
+  "refs": [
+   "defender_advanced_hunting.csv:3",
+   "A6",
+   "A10"
+  ]
+ },
+ {
+  "status": "aberta",
+  "confianca": "baixa",
+  "fase": null,
+  "sustentacao": "sign-in de 198.51.100.77 às 13:22, depois da execução de updater.exe (13:12).",
+  "confirmaria": "análise do updater.exe; leitura de \"Login Data\" do navegador por processo não navegador (Q4.7).",
+  "refutaria": "a senha de m.silva aparecer em vazamento anterior ao incidente / phishing de credencial separado.",
+  "proximo_passo": "coletar updater.exe; rodar Q4.7 e Q1.3.",
+  "id": "H3",
+  "titulo": "Senha de m.silva obtida por infostealer (updater.exe)",
+  "linha": 15,
+  "refs": []
+ }
+]

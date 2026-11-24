@@ -1,0 +1,9 @@
+[
+ {
+  "id": "TESTE-001",
+  "titulo": "Caso sintético: phishing Financeiro",
+  "fase": "Detectar / Identification",
+  "evidencias": 7,
+  "eventos": 50
+ }
+]

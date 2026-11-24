@@ -1,0 +1,394 @@
+{
+ "host": {
+  "ws-fin-023": {
+   "primeira": "2026-11-10T11:30:00.000Z",
+   "ultima": "2026-11-10T13:40:15.512Z",
+   "eventos": 23,
+   "fontes": [
+    "defender",
+    "elastic",
+    "entra_signin",
+    "sentinel",
+    "splunk",
+    "wazuh"
+   ]
+  },
+  "ws-fin-041": {
+   "primeira": "2026-11-10T12:10:00.000Z",
+   "ultima": "2026-11-10T12:10:00.000Z",
+   "eventos": 1,
+   "fontes": [
+    "entra_signin"
+   ]
+  },
+  "srv-file-01": {
+   "primeira": "2026-11-10T13:30:00.000Z",
+   "ultima": "2026-11-10T14:31:10.000Z",
+   "eventos": 19,
+   "fontes": [
+    "defender",
+    "elastic",
+    "sentinel",
+    "splunk",
+    "wazuh"
+   ]
+  }
+ },
+ "user": {
+  "admin.ti": {
+   "primeira": "2026-11-10T10:00:00.000Z",
+   "ultima": "2026-11-10T10:00:00.000Z",
+   "eventos": 1,
+   "fontes": [
+    "entra_audit"
+   ]
+  },
+  "m.silva": {
+   "primeira": "2026-11-10T11:30:00.000Z",
+   "ultima": "2026-11-10T13:39:58.000Z",
+   "eventos": 25,
+   "fontes": [
+    "defender",
+    "entra_audit",
+    "entra_signin"
+   ]
+  },
+  "svc_backup": {
+   "primeira": "2026-11-10T11:55:12.441Z",
+   "ultima": "2026-11-10T14:31:05.400Z",
+   "eventos": 12,
+   "fontes": [
+    "defender",
+    "sentinel",
+    "splunk",
+    "wazuh"
+   ]
+  },
+  "j.souza": {
+   "primeira": "2026-11-10T12:10:00.000Z",
+   "ultima": "2026-11-10T12:10:00.000Z",
+   "eventos": 1,
+   "fontes": [
+    "entra_signin"
+   ]
+  },
+  "dc01$": {
+   "primeira": "2026-11-10T13:30:00.000Z",
+   "ultima": "2026-11-10T13:30:00.210Z",
+   "eventos": 2,
+   "fontes": [
+    "sentinel",
+    "wazuh"
+   ]
+  }
+ },
+ "ip": {
+  "192.0.2.10": {
+   "primeira": "2026-11-10T10:00:00.000Z",
+   "ultima": "2026-11-10T12:10:00.000Z",
+   "eventos": 3,
+   "fontes": [
+    "entra_audit",
+    "entra_signin"
+   ]
+  },
+  "10.10.0.50": {
+   "primeira": "2026-11-10T11:55:12.441Z",
+   "ultima": "2026-11-10T11:55:12.441Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "203.0.113.80": {
+   "primeira": "2026-11-10T13:02:11.341Z",
+   "ultima": "2026-11-10T13:02:11.341Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "192.0.2.200": {
+   "primeira": "2026-11-10T13:06:09.120Z",
+   "ultima": "2026-11-10T13:30:00.000Z",
+   "eventos": 3,
+   "fontes": [
+    "defender",
+    "elastic",
+    "splunk"
+   ]
+  },
+  "10.10.20.23": {
+   "primeira": "2026-11-10T13:06:09.120Z",
+   "ultima": "2026-11-10T13:40:15.512Z",
+   "eventos": 8,
+   "fontes": [
+    "defender",
+    "elastic",
+    "sentinel",
+    "splunk",
+    "wazuh"
+   ]
+  },
+  "203.0.113.45": {
+   "primeira": "2026-11-10T13:08:20.441Z",
+   "ultima": "2026-11-10T13:52:12.900Z",
+   "eventos": 5,
+   "fontes": [
+    "defender",
+    "elastic",
+    "splunk"
+   ]
+  },
+  "198.51.100.77": {
+   "primeira": "2026-11-10T13:22:10.000Z",
+   "ultima": "2026-11-10T13:30:44.000Z",
+   "eventos": 7,
+   "fontes": [
+    "entra_audit",
+    "entra_signin"
+   ]
+  },
+  "10.10.0.10": {
+   "primeira": "2026-11-10T13:30:00.000Z",
+   "ultima": "2026-11-10T13:30:00.210Z",
+   "eventos": 2,
+   "fontes": [
+    "sentinel",
+    "wazuh"
+   ]
+  },
+  "10.10.20.41": {
+   "primeira": "2026-11-10T13:30:00.000Z",
+   "ultima": "2026-11-10T13:30:00.000Z",
+   "eventos": 1,
+   "fontes": [
+    "splunk"
+   ]
+  },
+  "10.10.30.5": {
+   "primeira": "2026-11-10T13:30:00.210Z",
+   "ultima": "2026-11-10T14:31:10.000Z",
+   "eventos": 10,
+   "fontes": [
+    "defender",
+    "elastic",
+    "splunk",
+    "wazuh"
+   ]
+  },
+  "198.51.100.200": {
+   "primeira": "2026-11-10T13:57:42.800Z",
+   "ultima": "2026-11-10T14:31:10.000Z",
+   "eventos": 4,
+   "fontes": [
+    "elastic",
+    "splunk"
+   ]
+  }
+ },
+ "domain": {
+  "www.office.com": {
+   "primeira": "2026-11-10T13:06:09.120Z",
+   "ultima": "2026-11-10T13:06:10.000Z",
+   "eventos": 2,
+   "fontes": [
+    "defender",
+    "elastic"
+   ]
+  },
+  "cdn-update.example-cdn.net": {
+   "primeira": "2026-11-10T13:08:20.441Z",
+   "ultima": "2026-11-10T13:52:11.020Z",
+   "eventos": 3,
+   "fontes": [
+    "defender",
+    "elastic"
+   ]
+  },
+  "bkp.example-storage.net": {
+   "primeira": "2026-11-10T13:57:42.800Z",
+   "ultima": "2026-11-10T13:57:43.004Z",
+   "eventos": 2,
+   "fontes": [
+    "elastic",
+    "splunk"
+   ]
+  }
+ },
+ "sha256": {
+  "1c2df732a1c819a38f653f85ff1e59fd7a7ea6588297822adf856d6308f45cc3": {
+   "primeira": "2026-11-10T13:02:11.341Z",
+   "ultima": "2026-11-10T13:07:45.512Z",
+   "eventos": 2,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "e3358b51efbc884f392046e1bd69ba6495e4555edc53e70d1e9b9d1e3cf5b281": {
+   "primeira": "2026-11-10T13:05:00.100Z",
+   "ultima": "2026-11-10T13:05:00.100Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "6bbef8dca44da99e29f18dfde2012d5880a3f9796e447e15d03bbbdcd22a5c85": {
+   "primeira": "2026-11-10T13:08:02.201Z",
+   "ultima": "2026-11-10T13:08:02.201Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "b44b01c4ff956b0fa6f67375c1be29d867d738375e49ac58d08ef8c2d2bdf28b": {
+   "primeira": "2026-11-10T13:08:19.774Z",
+   "ultima": "2026-11-10T13:08:19.774Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "45ed71c9d81d104a33a15541d8ad8188bc2fad4c87982a05e6275462355f2622": {
+   "primeira": "2026-11-10T13:08:40.300Z",
+   "ultima": "2026-11-10T13:12:30.000Z",
+   "eventos": 2,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "180dc862954ed1bd1e5f74ec7477a1381b1e2527a4c33a9df17c7108b152b957": {
+   "primeira": "2026-11-10T13:09:05.118Z",
+   "ultima": "2026-11-10T13:09:05.118Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "ad0754f4c117ccf23d7874bf4721bfb8709ee60e2c7294c564d8e58d2e182409": {
+   "primeira": "2026-11-10T13:15:30.660Z",
+   "ultima": "2026-11-10T13:15:30.660Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "83a787c29da3c7350d88d4e838fe73e8a765cce8f259fca2ff4199c7e3b4a946": {
+   "primeira": "2026-11-10T13:15:34.000Z",
+   "ultima": "2026-11-10T13:15:34.000Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "c6e208ca805766dcf7f3eb1019b967cece5322a70b0fcd3a95f397784c90f8ef": {
+   "primeira": "2026-11-10T13:39:50.000Z",
+   "ultima": "2026-11-10T13:39:50.000Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "cc3f602c02b85a1d8e589ed90c51aa587adf921816b27164a996daaf09607712": {
+   "primeira": "2026-11-10T13:57:40.120Z",
+   "ultima": "2026-11-10T13:57:40.120Z",
+   "eventos": 1,
+   "fontes": [
+    "splunk"
+   ]
+  }
+ },
+ "process": {
+  "ms-teams.exe": {
+   "primeira": "2026-11-10T13:05:00.100Z",
+   "ultima": "2026-11-10T13:05:00.100Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "msedge.exe": {
+   "primeira": "2026-11-10T13:06:10.000Z",
+   "ultima": "2026-11-10T13:06:10.000Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "outlook.exe": {
+   "primeira": "2026-11-10T13:07:45.512Z",
+   "ultima": "2026-11-10T13:07:45.512Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "excel.exe": {
+   "primeira": "2026-11-10T13:08:02.201Z",
+   "ultima": "2026-11-10T13:08:02.201Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "powershell.exe": {
+   "primeira": "2026-11-10T13:08:19.774Z",
+   "ultima": "2026-11-10T13:52:10.000Z",
+   "eventos": 4,
+   "fontes": [
+    "defender",
+    "sentinel"
+   ]
+  },
+  "schtasks.exe": {
+   "primeira": "2026-11-10T13:09:05.118Z",
+   "ultima": "2026-11-10T13:09:05.400Z",
+   "eventos": 2,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "updater.exe": {
+   "primeira": "2026-11-10T13:12:30.000Z",
+   "ultima": "2026-11-10T13:12:30.000Z",
+   "eventos": 1,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "rundll32.exe": {
+   "primeira": "2026-11-10T13:15:30.660Z",
+   "ultima": "2026-11-10T13:15:34.000Z",
+   "eventos": 3,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "mstsc.exe": {
+   "primeira": "2026-11-10T13:39:50.000Z",
+   "ultima": "2026-11-10T13:39:58.000Z",
+   "eventos": 2,
+   "fontes": [
+    "defender"
+   ]
+  },
+  "cmd.exe": {
+   "primeira": "2026-11-10T13:41:30.000Z",
+   "ultima": "2026-11-10T13:41:30.000Z",
+   "eventos": 1,
+   "fontes": [
+    "sentinel"
+   ]
+  },
+  "rclone.exe": {
+   "primeira": "2026-11-10T13:57:40.000Z",
+   "ultima": "2026-11-10T13:57:43.004Z",
+   "eventos": 4,
+   "fontes": [
+    "sentinel",
+    "splunk",
+    "wazuh"
+   ]
+  }
+ }
+}

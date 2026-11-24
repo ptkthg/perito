@@ -1,0 +1,68 @@
+[
+ {
+  "nome": "caso",
+  "grupo": "caso",
+  "bytes": 1798,
+  "mtime": "2026-11-24T16:00:11.906Z"
+ },
+ {
+  "nome": "triagem",
+  "grupo": "caso",
+  "bytes": 72,
+  "mtime": "2026-11-24T14:59:37.532Z"
+ },
+ {
+  "nome": "achados",
+  "grupo": "caso",
+  "bytes": 2612,
+  "mtime": "2026-11-24T15:03:34.151Z"
+ },
+ {
+  "nome": "hipoteses",
+  "grupo": "caso",
+  "bytes": 1342,
+  "mtime": "2026-11-24T15:03:37.195Z"
+ },
+ {
+  "nome": "escopo",
+  "grupo": "caso",
+  "bytes": 1828,
+  "mtime": "2026-11-24T15:03:43.091Z"
+ },
+ {
+  "nome": "limitacoes",
+  "grupo": "caso",
+  "bytes": 825,
+  "mtime": "2026-11-24T15:03:40.010Z"
+ },
+ {
+  "nome": "acoes",
+  "grupo": "caso",
+  "bytes": 167,
+  "mtime": "2026-11-24T14:59:37.533Z"
+ },
+ {
+  "nome": "revisoes/codex-20261124-revisao-2.md",
+  "grupo": "revisoes",
+  "bytes": 19875,
+  "mtime": "2026-11-24T15:11:31.394Z"
+ },
+ {
+  "nome": "revisoes/codex-20261124-revisao.md",
+  "grupo": "revisoes",
+  "bytes": 20901,
+  "mtime": "2026-11-24T15:07:16.598Z"
+ },
+ {
+  "nome": "revisoes/conciliacao.md",
+  "grupo": "revisoes",
+  "bytes": 3066,
+  "mtime": "2026-11-24T15:08:25.750Z"
+ },
+ {
+  "nome": "revisoes/resumo-cobertura.md",
+  "grupo": "revisoes",
+  "bytes": 3670,
+  "mtime": "2026-11-24T15:08:32.170Z"
+ }
+]

