@@ -249,7 +249,7 @@ export function Relatorios({ caso, rev, resumo, onAgente }: { caso: string; rev:
         </p>
       )}
       {nome && (
-        <article className="rel-papel" aria-label={`relatório ${nome}`}>
+        <article className="rel-papel" data-tour="relatorio" aria-label={`relatório ${nome}`}>
           <header className="rel-cab">
             <span className="lbl">PERITO // {caso}</span>
             <span>{resumo?.titulo ?? ''}</span>

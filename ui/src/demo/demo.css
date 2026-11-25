@@ -58,3 +58,8 @@ dialog::backdrop { overflow: hidden; overscroll-behavior: contain; }
 @media (max-width: 900px) { .demo-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .demo-cards article:nth-child(3) { border-left: 0; } .demo-cards article:nth-child(n+3) { border-top: var(--line); } }
 @media (max-width: 500px) { .demo-cards { grid-template-columns: 1fr; } .demo-cards article + article { border-left: 0; border-top: var(--line); } .demo-page { font-size: 17px; } }
 @media print { .demo-banner, .demo-tour, .demo-glossario, .demo-tooltip { display: none; } }
+.demo-shot { margin: 40px 0 0; }
+.demo-shot a { display: block; border: var(--line); transition: border-color 0.15s; }
+.demo-shot a:hover, .demo-shot a:focus-visible { border-color: var(--amber); }
+.demo-shot img { display: block; width: 100%; height: auto; }
+.demo-shot figcaption { margin-top: 10px; color: var(--text-2); font-size: 14px; }

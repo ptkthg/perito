@@ -27,7 +27,8 @@ export function Tour({ passo, visao, onPasso, onSair }: { passo: number; visao: 
       const alvo = document.querySelector<HTMLElement>(`[data-tour="${step.alvo}"]`);
       if (visao === step.visao && alvo && alvo.getBoundingClientRect().height > 0) {
         if (scrolled !== alvo) {
-          alvo.scrollIntoView({ block: 'center', behavior: 'instant' });
+          // Alvo maior que a tela (ex.: o relatório) alinha pelo topo, para o título aparecer.
+          alvo.scrollIntoView({ block: alvo.getBoundingClientRect().height > window.innerHeight * 0.8 ? 'start' : 'center', behavior: 'instant' });
           if (step.visao === 'timeline') {
             const detalhe = alvo.querySelector('.detail-body');
             if (detalhe) detalhe.scrollTop = detalhe.scrollHeight;

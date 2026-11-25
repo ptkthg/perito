@@ -17,6 +17,12 @@ function Apresentacao() {
         <a href={PROJETO}>Código no GitHub</a>
         <a href="https://portfolioptk.vercel.app">Portfólio do autor</a>
       </nav>
+      <figure className="demo-shot">
+        <a href="#/caso/TESTE-001/visao" aria-label="Abrir a demonstração a partir da captura da visão geral">
+          <img src="/demo/visao-geral.png" width={1440} height={900} alt="Console do Perito na visão geral do caso fictício: mapa do ataque em 8 passos, fases do ataque, máquinas e contas afetadas e a conferência de custódia" />
+        </a>
+        <figcaption>Visão geral do caso fictício: o resumo em linguagem simples, com cada frase marcada como comprovada, suposição ou sem dados.</figcaption>
+      </figure>
     </header>
     <section className="demo-problema"><h2>O problema</h2><ul>
       <li>Num incidente real, as pistas estão espalhadas em ferramentas diferentes, cada uma com seu formato.</li>
