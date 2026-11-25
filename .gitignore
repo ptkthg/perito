@@ -11,3 +11,4 @@ dist/
 .pytest_tmp/
 node_modules/
 ui/dist-demo/
+.vercel/

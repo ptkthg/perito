@@ -1,0 +1,30 @@
+# Não enviar casos, configuração local ou arquivos alheios à demonstração.
+casos
+.agents
+.claude
+.codex
+.aws
+.git
+.github
+.venv
+.vercel
+.pytest_cache
+.pytest_tmp
+__pycache__
+*.pyc
+# .env.demo só liga o modo demonstração (sem segredo) e precisa ser enviado.
+.env
+.env.local
+.env.*.local
+.env.production
+node_modules
+/docs
+/queries
+/templates
+/tests
+/samples
+/scripts
+/src
+ui/dist-demo
+ui/screenshots
+ui/node_modules

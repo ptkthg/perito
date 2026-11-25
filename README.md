@@ -8,7 +8,7 @@ Sentinel, Entra ID sign-in and audit, Splunk, Elastic and Wazuh) into a single U
 and MITRE ATT&CK mapping, and guides the investigation all the way to the executive report. Python standard library only
 for parsing; React 19 analyst console; built spec-first, with Claude Code and Codex reviewing each other.
 
-**Demonstração:** <!-- demo:url --> link publicado em breve <!-- /demo:url --> · caso fictício, dados 100% sintéticos,
+**Demonstração:** <!-- demo:url --> **[perito-demo-lovat.vercel.app](https://perito-demo-lovat.vercel.app)** <!-- /demo:url --> · caso fictício, dados 100% sintéticos,
 somente leitura, com tour guiado.
 
 ![Console do Perito na visão geral do caso fictício](ui/public/demo/visao-geral.png)
