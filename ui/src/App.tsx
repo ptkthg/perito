@@ -1,12 +1,15 @@
 // Raiz: escolhe entre a seleção de casos (#/) e o console do caso (#/caso/<ID>/<visao>).
 // Sem visão na URL: GUIADO abre a Visão Geral; ANALISTA abre a timeline.
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useRoute } from './lib/route';
 import { CaseSelect } from './components/CaseSelect';
 import { CaseShell } from './components/CaseShell';
 import { loadTema } from './lib/prefs';
 import { type Modo, ModoContext, loadModo, saveModo } from './lib/mode';
 import { ErrorBoundary } from './components/ErrorBoundary';
+
+// O Vite remove este import e seu CSS do build normal.
+const DemoApp = import.meta.env.VITE_DEMO === '1' ? lazy(() => import('./demo/DemoApp')) : null;
 
 export function App() {
   const route = useRoute();
@@ -25,7 +28,11 @@ export function App() {
   return (
     <ModoContext.Provider value={modo}>
       <ErrorBoundary label="APP" chave="app">
-      {!route.caso ? (
+      {DemoApp ? (
+        <Suspense fallback={<p>Carregando…</p>}>
+          <DemoApp route={route} modo={modo} onModo={setModo} />
+        </Suspense>
+      ) : !route.caso ? (
         <CaseSelect />
       ) : (
         <CaseShell

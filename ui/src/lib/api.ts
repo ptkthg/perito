@@ -506,7 +506,7 @@ export function rebucket(base: Histograma, eventos: PeritoEvent[]): Histograma {
   return { ...base, fontes };
 }
 
-export const api: PeritoApi = import.meta.env.VITE_FIXTURES === '1' ? new FixturesApi() : new RealApi();
+export const api: PeritoApi = import.meta.env.VITE_DEMO === '1' || import.meta.env.VITE_FIXTURES === '1' ? new FixturesApi() : new RealApi();
 
 /** Mensagem curta de erro para a linha de status / estado inline. */
 export function describeError(e: unknown): string {

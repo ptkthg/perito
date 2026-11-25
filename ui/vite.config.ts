@@ -11,14 +11,14 @@ const token = env.PERITO_UI_TOKEN;
 // Alvo da API no dev (padrão 8765). Use PERITO_UI_API=http://127.0.0.1:8766 para um servidor de teste com stubs.
 const alvo = env.PERITO_UI_API || 'http://127.0.0.1:8765';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   base: '/',
   build: {
-    outDir: '../src/perito/ui/static',
+    outDir: mode === 'demo' ? 'dist-demo' : '../src/perito/ui/static',
     emptyOutDir: true,
     // fixtures (public/) são só para desenvolvimento; não vão para o static do servidor
-    copyPublicDir: false,
+    copyPublicDir: mode === 'demo',
     sourcemap: false,
     target: 'es2022',
   },
@@ -35,4 +35,4 @@ export default defineConfig({
     },
   },
   preview: { host: '127.0.0.1', port: 4173 },
-});
+}));

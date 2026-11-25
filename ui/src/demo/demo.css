@@ -1,0 +1,60 @@
+/* A identidade do console permanece: fontes locais, tokens e linhas de 1 px. */
+.demo-page { height: 100dvh; overflow: auto; padding: clamp(24px, 5vw, 80px) max(24px, calc((100vw - 1240px) / 2)); font-family: var(--font-label); font-size: 18px; line-height: 1.55; }
+.demo-page h1 { font-size: clamp(28px, 3.7vw, 58px); line-height: 1.12; margin: 0 0 24px; font-weight: 600; text-wrap: balance; }
+.demo-page h1 span { color: var(--text-2); }
+.demo-page a, .demo-banner a { color: var(--cyan); text-underline-offset: 3px; }
+.demo-page h2 { font-size: 28px; margin: 0 0 20px; line-height: 1.2; }
+.demo-page h3 { font-size: 22px; margin: 0 0 12px; font-weight: 600; }
+.demo-page p { max-width: 70ch; margin: 0 0 18px; }
+.demo-lead { font-size: clamp(20px, 2vw, 29px); line-height: 1.4; }
+.demo-notice { color: var(--green); font-family: var(--font-data); font-size: 14px; }
+.demo-intro { padding-bottom: 48px; border-bottom: var(--double); }
+.demo-page section { padding: 40px 0; border-bottom: var(--line); }
+.demo-page ul { margin: 0; padding-left: 22px; max-width: 70ch; }
+.demo-page li + li { margin-top: 12px; }
+.demo-actions { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin-top: 28px; }
+.demo-actions a, .demo-actions button { padding: 10px 0; min-height: 44px; }
+.demo-actions .demo-primary { background: var(--amber); color: var(--on-signal); padding: 12px 20px; text-decoration: none; font-weight: 600; }
+.demo-actions .demo-primary:hover { background: var(--text); }
+.demo-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: var(--line); }
+.demo-cards article { padding: 24px; background: var(--surface-1); }
+.demo-cards article + article { border-left: var(--line); }
+.demo-cards p { margin: 0; font-size: 17px; color: var(--text-2); }
+.demo-page footer { padding: 24px 0; color: var(--text-2); font-size: 14px; }
+.demo-small img { display: block; width: 100%; height: auto; border: var(--line); }
+.demo-small figure { margin: 24px 0; }
+.demo-small figcaption { color: var(--text-2); font-size: 16px; padding-top: 8px; }
+.demo-console { height: 100dvh; display: flex; flex-direction: column; }
+.demo-console > .app { height: auto; flex: 1; min-height: 0; }
+.demo-banner { flex: none; background: var(--surface-2); border-bottom: var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 4px 12px; gap: 8px; font-size: 13px; line-height: 24px; }
+.demo-banner nav { display: flex; gap: 20px; }
+.demo-banner button { color: var(--cyan); }
+.demo-banner button:hover { text-decoration: underline; }
+.demo-glossario { color: var(--text); background: var(--bg); border: var(--line-strong); padding: 24px; width: min(720px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); }
+.demo-glossario header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.demo-glossario h1 { font: 600 30px var(--font-label); margin: 0; }
+.demo-glossario dl > div { padding: 16px 0; border-bottom: var(--line); }
+.demo-glossario dt { color: var(--amber); font-weight: 600; }
+.demo-glossario dd { margin: 6px 0 0; line-height: 1.6; }
+.demo-glossario::backdrop { background: rgb(0 0 0 / .76); }
+.demo-tour { position: fixed; inset: 0; margin: 0; padding: 0; border: 0; width: 100vw; max-width: none; height: 100dvh; max-height: none; background: transparent; color: var(--text); }
+.demo-tour::backdrop { background: transparent; }
+dialog:modal { overscroll-behavior: contain; }
+dialog::backdrop { overflow: hidden; overscroll-behavior: contain; }
+.demo-shade { position: absolute; inset: 0; pointer-events: none; }
+.demo-tour-card { position: absolute; width: min(440px, calc(100vw - 24px)); max-height: calc(100dvh - 64px); overflow: auto; background: var(--surface-1); border: 1px solid var(--amber); padding: 24px; font: 17px/1.5 var(--font-label); }
+.demo-tour-card.is-centered { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.demo-tour-card h1 { font-size: 27px; line-height: 1.15; margin: 12px 0 24px; text-wrap: balance; }
+.demo-tour-card h2 { font-size: 16px; color: var(--amber); margin: 20px 0 6px; }
+.demo-tour-card p { margin: 0; }
+.demo-step { color: var(--text-2); font-family: var(--font-data); font-size: 13px; }
+.demo-tour-card nav { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.demo-tour-card button, .demo-glossario button { border: var(--line-strong); padding: 8px 12px; min-height: 44px; }
+.demo-tour-card button:hover, .demo-glossario button:hover { color: var(--amber); }
+.demo-tour-card button:disabled { opacity: .45; cursor: default; }
+.demo-tooltip { position: fixed; z-index: 30; padding: 12px; width: min(320px, calc(100vw - 16px)); border: var(--line-strong); background: var(--surface-2); font-size: 14px; line-height: 1.5; }
+.demo-tooltip p { margin: 6px 0 0; }
+.demo-tooltip strong { color: var(--amber); }
+@media (max-width: 900px) { .demo-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .demo-cards article:nth-child(3) { border-left: 0; } .demo-cards article:nth-child(n+3) { border-top: var(--line); } }
+@media (max-width: 500px) { .demo-cards { grid-template-columns: 1fr; } .demo-cards article + article { border-left: 0; border-top: var(--line); } .demo-page { font-size: 17px; } }
+@media print { .demo-banner, .demo-tour, .demo-glossario, .demo-tooltip { display: none; } }

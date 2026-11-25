@@ -57,6 +57,8 @@ interface Props {
   visao: Visao;
   modo: Modo;
   onModo(m: Modo): void;
+  /** Seleção solicitada por uma apresentação externa; ausente no console normal. */
+  selecionarEvento?: boolean;
 }
 
 interface Msg {
@@ -70,7 +72,7 @@ interface Msg {
 const isTyping = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
 
-export function CaseShell({ caso, visao, modo, onModo }: Props) {
+export function CaseShell({ caso, visao, modo, onModo, selecionarEvento }: Props) {
   const [resumo, setResumo] = useState<Resumo | null>(null);
   const [entidades, setEntidades] = useState<Entidades | null>(null);
   const [baseErr, setBaseErr] = useState<string | null>(null);
@@ -381,6 +383,13 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
     },
     [ensureAll, openEvents, say],
   );
+
+  useEffect(() => {
+    if (!selecionarEvento || visao !== 'timeline' || evLoading || !resp) return;
+    const evento = resp.eventos.find(e => /powershell\.exe/i.test(e.process ?? '') && /excel\.exe/i.test(e.parent ?? ''));
+    if (evento) tlRef.current?.focusEvents([evento.idx], 'PowerShell iniciado pelo Excel', true);
+    else if (filter.clauses.length || filter.de || filter.ate) applyFilter(EMPTY_FILTER, 'Filtros limpos para mostrar o evento selecionado');
+  }, [selecionarEvento, visao, evLoading, resp, filter, applyFilter]);
 
   // ---------- escritas / ingestão: recarrega tudo ----------
   const recarregar = useCallback(() => {
@@ -820,7 +829,7 @@ export function CaseShell({ caso, visao, modo, onModo }: Props) {
       </main>
       <footer className="bottom">
         <div className={`msg msg-${msg.kind}`} role="status" aria-live={msg.kind === 'err' ? 'off' : 'polite'} aria-atomic="true">
-          {msg.text ? msg.text : <span className="t3">pronto · {api.modo === 'fixtures' ? 'modo FIXTURES' : 'API local'} · densidade {dens} ({rowH}px)</span>}
+          {msg.text ? msg.text : <span className="t3">pronto · {api.modo === 'fixtures' ? (import.meta.env.VITE_DEMO === '1' ? 'modo DEMONSTRAÇÃO' : 'modo FIXTURES') : 'API local'} · densidade {dens} ({rowH}px)</span>}
           {msg.acoes.map((a) => (
             <button
               key={a.tecla}

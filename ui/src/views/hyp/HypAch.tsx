@@ -237,7 +237,7 @@ export const HypAch = forwardRef<ViewHandle, Props>(function HypAch({ caso, modo
   }));
 
   return (
-    <div className="ha" ref={rootRef} tabIndex={-1}>
+    <div className="ha" ref={rootRef} tabIndex={-1} data-tour="hipoteses">
       {busca && (
         <div className="strip">
           <span className="lbl t2">BUSCA</span> <span className="amber">/{busca}</span> <span className="t3">· Esc limpa</span>

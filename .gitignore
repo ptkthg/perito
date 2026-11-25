@@ -10,3 +10,4 @@ dist/
 *.egg-info/
 .pytest_tmp/
 node_modules/
+ui/dist-demo/

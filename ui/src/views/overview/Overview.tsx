@@ -128,9 +128,9 @@ function computeFases(events: PeritoEvent[], resumo: Resumo | null, conf: Confir
   });
 }
 
-function Section({ title, children, id }: { title: string; children: React.ReactNode; id: string }) {
+function Section({ title, children, id, ...attrs }: { title: string; children: React.ReactNode; id: string; 'data-tour'?: string }) {
   return (
-    <section className="ov-sec" aria-labelledby={id}>
+    <section className="ov-sec" aria-labelledby={id} {...attrs}>
       <h2 id={id} className="lbl ov-h">
         {title}
       </h2>
@@ -205,10 +205,10 @@ export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertu
           ))}
         </p>
       </Section>
-      <Section title="MAPA DO ATAQUE" id="ov-mapa">
+      <Section title="MAPA DO ATAQUE" id="ov-mapa" data-tour="mapa">
         <MapCompact caso={caso} rev={rev} modo={modo} onAbrir={onAbrirMapa} />
       </Section>
-      <Section title="FASES DO ATAQUE" id="ov-fases">
+      <Section title="FASES DO ATAQUE" id="ov-fases" data-tour="fases">
         {!evs && <p className="t3">CARREGANDO eventos ...</p>}
         {evs && !evs.ok && <p className="red">ERRO {evs.err}</p>}
         {fases && (
@@ -310,7 +310,7 @@ export function Overview({ caso, resumo, entidades, onPivot, onTatica, onCobertu
           {iocs && !iocs.ok && <p className="red">ERRO iocs: {iocs.err}</p>}
         </Section>
 
-        <Section title="DÁ PARA CONFIAR NOS DADOS?" id="ov-confianca">
+        <Section title="DÁ PARA CONFIAR NOS DADOS?" id="ov-confianca" data-tour="confianca">
           {!resumo && <p className="t3">CARREGANDO /resumo ...</p>}
           {resumo && (
             <dl className="ov-dl">

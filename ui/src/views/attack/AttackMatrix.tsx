@@ -87,7 +87,7 @@ export const AttackMatrix = forwardRef<ViewHandle, Props>(function AttackMatrix(
   const confirmadas = (resumo?.tecnicas ?? []).filter((t) => conf.global.has(t.id)).length;
 
   return (
-    <div className="mxv" ref={rootRef} tabIndex={-1}>
+    <div className="mxv" ref={rootRef} tabIndex={-1} data-tour="attack">
       <div className="doc-bar">
         <span className="lbl">F3 ATT&amp;CK</span> <span className="t3">▮</span> {total} técnicas ·{' '}
         <span className="green">{confirmadas} confirmadas</span> · <span className="amber">{total - confirmadas} sugeridas (?)</span>

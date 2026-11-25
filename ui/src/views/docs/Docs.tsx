@@ -26,7 +26,7 @@ export function Escopo({ caso, rev, modo, onAgente }: { caso: string; rev: numbe
   const d = useLoad(() => api.doc(caso, 'escopo'), [caso, rev]);
   const vazio = d?.ok && !d.v.conteudo.replace(/<!--[\s\S]*?-->/g, '').replace(/^#.*$/gm, '').trim();
   return (
-    <div className="docv">
+    <div className="docv" data-tour="escopo">
       <div className="doc-bar">
         <span className="lbl">F7 ESCOPO</span> <span className="t3">▮ escopo.md</span>
         {d?.ok && <span className="t3"> · atualizado {d.v.mtime.replace('T', ' ').slice(0, 16)} UTC</span>}

@@ -29,7 +29,7 @@ export interface TimelineHandle {
   /** Esc em camadas: devolve true se consumiu (soltou detalhe / limpou busca). */
   escape(): boolean;
   /** Seleciona e destaca eventos (idx) vindos de refs; devolve quantos estão na lista atual. */
-  focusEvents(idxs: number[], rotulo: string): number;
+  focusEvents(idxs: number[], rotulo: string, fixar?: boolean): number;
   /** Abre a bancada (promover/vincular) no evento selecionado. */
   abrirBancada(tipo: 'achado' | 'hip', textoInicial?: string): void;
 }
@@ -441,7 +441,7 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
         if (alvo) setBancada({ tipo, ev: alvo, texto: textoInicial });
         else onMsg('nenhum evento selecionado para a bancada', 'err');
       },
-      focusEvents(idxs: number[], rotulo: string): number {
+      focusEvents(idxs: number[], rotulo: string, fixar = false): number {
         const set = new Set(idxs);
         const presentes = events.filter((x) => set.has(x.idx));
         setDestaque({ idxs: set, rotulo });
@@ -449,6 +449,7 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
         if (presentes.length === 0) return 0;
         const i = events.indexOf(presentes[0]!);
         selIdx.current = presentes[0]!.idx;
+        if (fixar) setPinned(presentes[0]!);
         move(i);
         return presentes.length;
       },
@@ -510,7 +511,7 @@ export const Timeline = forwardRef<TimelineHandle, Props>(function Timeline(prop
   })();
 
   return (
-    <div className={`tl${pinned ? ' is-pinned' : ''}${bancada ? ' has-bancada' : ''}`}>
+    <div data-tour="evento" className={`tl${pinned ? ' is-pinned' : ''}${bancada ? ' has-bancada' : ''}`}>
       <Seismograph
         hist={hist}
         sources={sources}
