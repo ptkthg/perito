@@ -169,7 +169,9 @@ def test_iocs_atomic_batch_and_limitations(workbench):
     ('POST', 'achados', dict(token=False), 403),
     ('POST', 'achados', dict(headers={'Host': 'evil.test'}), 403),
     ('POST', 'achados', dict(headers={'Content-Type': 'text/plain'}), 415),
-    ('POST', 'achados', dict(raw=b' ' * (2 * 1024**2)), 413),
+    # O servidor rejeita pelo Content-Length e fecha a conexão sem ler o corpo; enviar 2 MiB de fato
+    # faria o cliente receber BrokenPipe de vez em quando, conforme o tempo do socket.
+    ('POST', 'achados', dict(headers={'Content-Length': str(2 * 1024**2)}), 413),
     ('PATCH', '/api/casos', {}, 405),
     ('POST', 'doc/caso', {}, 405),
     ('PUT', 'achados', {}, 405),
